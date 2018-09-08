@@ -29,7 +29,7 @@ mount -t vboxsf linuxshare /usr/local/winshare
 （1）在windows用Notepad++写代码，在linux中用nasm、gcc编译和用dd打包，然后在windows中用Bochs调试运行  
 （2）Notepad++(windows)-->make(linux)-->run.bat(windows)  
 4、注意事项  
-编译/链接32位的C代码：
+&emsp;编译/链接32位的C代码：
 ```
 gcc -m32 -c -o main.o main.c
 ld main.o -melf_i386 -Ttext 0xc0001500 -e main -o kernel.bin
