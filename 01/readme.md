@@ -2,7 +2,7 @@
 a、int 0x10  
 &emsp;&emsp;使用BIOS中断（int 0x10）显示“hello，world”  
 b、操作显存  
-&emsp;&emsp;直接往显存写入“hello，world”字符。显存地址分布如下：  
+&emsp;&emsp;直接往显存写入“hello，world”字符串。显存地址分布如下：  
 <table>
 	<tr>
 		<td>起始</td>
