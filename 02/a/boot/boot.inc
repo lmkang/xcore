@@ -1,4 +1,4 @@
-	;loader在第2个扇区,在mbr之后
+	;loader的磁盘位置,在第2个扇区,在mbr之后
 	LOADER_START_SECTOR equ 0x1
 	
 	;loader的大小,占4个扇区
