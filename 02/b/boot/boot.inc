@@ -1,10 +1,4 @@
 ;type,base,limit
-%macro SEG_NULLASM 0
-    dw 0, 0
-    db 0, 0, 0, 0
-%endmacro
-
-;type,base,limit
 %macro SEG_ASM 3
     dw (((%3) >> 12) & 0xffff), ((%2) & 0xffff)
     db (((%2) >> 16) & 0xff), (0x90 | (%1)), (0xC0 | (((%3) >> 28) & 0xf)), (((%2) >> 24) & 0xff)
