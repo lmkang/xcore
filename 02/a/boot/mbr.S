@@ -1,4 +1,4 @@
-	%include "boot.inc"
+	%include "loader.inc"
 	
 	org 0x7c00
 	
