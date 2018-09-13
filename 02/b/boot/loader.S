@@ -19,8 +19,7 @@ VIDEO_DESC:
 	SEG_ASM 0x02, 0xb8000, 0x00007fff
 	
 	GDT_SIZE equ $ - GDT_BASE
-	GDT_LIMIT equ GDT_SIZE - 1
-	
+	GDT_LIMIT equ GDT_SIZE - 1	
 	times 60 dq 0
 	
 	SELECTOR_CODE equ (0x0001 << 3) + TI_GDT + RPL0
@@ -50,9 +49,9 @@ loader_start:
 	mov cr0, eax
 	
 	;4、jmp清空流水线
-	jmp dword SELECTOR_CODE:.p_mode_start
+	jmp dword SELECTOR_CODE:p_mode_start
 [bits 32]
-.p_mode_start:
+p_mode_start:
 	mov ax, SELECTOR_DATA
 	mov ds, ax
 	mov es, ax
