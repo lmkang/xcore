@@ -10,7 +10,7 @@
 	mov ax, 0xb800
 	mov gs, ax
 	mov bx, 0x00
-	mov si, msg
+	mov si, MESSAGE
 msgloop:
 	mov al, [si]
 	cmp al, 0
@@ -24,7 +24,8 @@ msgloop:
 final:
 	hlt
 	jmp final
-msg:
+	
+MESSAGE:
 	db "hello,world!"
 	db 0
 
