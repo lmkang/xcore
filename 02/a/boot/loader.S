@@ -1,4 +1,4 @@
-	%include "boot.inc"
+	%include "loader.inc"
 	
 	org LOADER_BASE_ADDR
 	
