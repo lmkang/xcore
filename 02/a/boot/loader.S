@@ -2,7 +2,7 @@
 	
 	org LOADER_BASE_ADDR
 	
-	mov si, msg
+	mov si, MESSAGE
 msgloop:
 	mov al, [si]
 	cmp al, 0
@@ -16,7 +16,7 @@ final:
 	hlt
 	jmp final
 
-msg:
+MESSAGE:
 	db "xcore/02/a hello,loader!"
 	db 0x0d, 0x0a
 	db 0
