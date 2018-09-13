@@ -19,7 +19,9 @@ VIDEO_DESC:
 	SEG_ASM 0x02, 0xb8000, 0x00007fff
 	
 	GDT_SIZE equ $ - GDT_BASE
-	GDT_LIMIT equ GDT_SIZE - 1	
+	GDT_LIMIT equ GDT_SIZE - 1
+	
+	;预留60个段描述符
 	times 60 dq 0
 	
 	SELECTOR_CODE equ (0x0001 << 3) + TI_GDT + RPL0
