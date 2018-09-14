@@ -169,5 +169,5 @@ final:
 	jmp final
 	
 MESSAGE:
-	db "xcore/02/a hello,protect mode!"
+	db "xcore/02/c hello,total memory number at 0xb00!"
 	db 0
