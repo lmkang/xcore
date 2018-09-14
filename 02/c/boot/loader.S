@@ -96,6 +96,8 @@ try_e801_mem:
 	;bx和dx是以64KB为单位的内存数量,将其转为Byte单位
 	xor eax, eax
 	mov ax, bx
+	;32乘法,被乘数是eax,积为64位
+	;积的高32位在edx中,低32位在eax中
 	mov ecx, 0x10000
 	mul ecx
 	;此方法只能测出4GB以内的内存,32位的eax足够了
