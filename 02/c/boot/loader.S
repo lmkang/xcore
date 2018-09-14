@@ -30,7 +30,6 @@ VIDEO_DESC:
 	;此处的物理地址是:0x900+4*8+60*8=0x900+0x200=0xb00
 	total_mem_bytes dd 0
 	
-	
 GDT_PTR:
 	dw GDT_LIMIT
 	dd GDT_BASE
