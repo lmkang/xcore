@@ -33,7 +33,7 @@ GDT_PTR:
 	dd GDT_BASE
 
 MESSAGE:
-	db "xcore/02/a hello,protect mode!"
+	db "xcore/02/b hello,protect mode!"
 	db 0
 	
 loader_start:
