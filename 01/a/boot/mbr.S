@@ -23,7 +23,7 @@ final:
 	jmp final
 
 MESSAGE:
-	db "hello,world!"
+	db "xcore/01/a hello,world!"
 	db 0x0d, 0x0a
 	db 0
 
