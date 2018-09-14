@@ -26,7 +26,7 @@ final:
 	jmp final
 	
 MESSAGE:
-	db "hello,world!"
+	db "xcore/01/b hello,world!"
 	db 0
 
 	times 510-($-$$) db 0
