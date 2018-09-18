@@ -5,4 +5,4 @@ cc :
 	dd if=build/mbr.bin of=build/xcore.img bs=512 count=1 conv=notrunc
 	dd if=build/loader.bin of=build/xcore.img bs=512 count=4 seek=1 conv=notrunc
 clean : 
-	rm build/xcore.img build/mbr.bin build/loader.bin
+	rm build/*
