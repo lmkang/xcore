@@ -1,7 +1,7 @@
 cc : 
 	nasm -I boot/ -o build/mbr.bin boot/mbr.S
 	nasm -I boot/ -o build/loader.bin boot/loader.S
-	nasm -f elf -o build/print.o kernel/print.S
+	nasm -f elf -o build/print.o lib/kernel/print.S
 	gcc -I lib/kernel/ -m32 -c -o build/main.o kernel/main.c
 	ld -melf_i386 -Ttext 0xc0001500 -e main -o build/kernel.bin build/main.o build/print.o
 	dd if=/dev/zero of=build/xcore.img bs=1M count=10

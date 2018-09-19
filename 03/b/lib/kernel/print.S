@@ -111,3 +111,29 @@ put_char:
 	;恢复环境,返回
 	popad
 	ret
+	
+global put_str
+;打印以0字符结尾的字符串
+;参数:栈中的字符串
+put_str:
+	;备份ebx,ecx
+	push ebx
+	push ecx
+	;用ecx存储参数,清空
+	xor ecx, ecx
+	;获取字符串的地址
+	mov ebx, [esp + 12];
+.each_str:
+	mov cl, [ebx]
+	cmp cl, 0
+	jz .str_end
+	push ecx
+	call put_char
+	add esp, 4 ;回收参数所占的栈空间
+	inc ebx
+	jmp .each_str
+.str_end:
+	;恢复环境,返回
+	pop ecx
+	pop ebx
+	ret
