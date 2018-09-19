@@ -26,30 +26,35 @@ read_disk_m16:
 	mov di, cx ;备份cx
 	
 	;第1步:设置要读取得扇区数
+	mov dx, 0x1f2
 	mov al, cl
-	out 0x1f2, al
+	out dx, al
 	
 	mov eax, esi ;恢复eax
 	
 	;第2步:将LBA地址存入0x1f3~0x1f6
 	
 	;LBA地址7~0位写入0x1f3
-	out 0x1f3, al
+	mov dx, 0x1f3
+	out dx, al
 	
 	;LBA地址15~8位写入0x1f4
+	mov dx, 0x1f4
 	mov cl, 8
 	shr eax, cl
-	out 0x1f4, al
+	out dx, al
 	
 	;LBA地址23~16位写入0x1f5
+	mov dx, 0x1f5
 	shr eax, cl
-	out 0x1f5, al
+	out dx, al
 	
 	;LBA地址27~24位写入0x1f6,并设置LBA模式
+	mov dx, 0x1f6
 	shr eax, cl
 	and al, 0x0f
 	or al, 0xe0
-	out 0x1f6, al
+	out dx, al
 	
 	;第3步:向0x1f7写入读命令(0x20)
 	mov dx, 0x1f7

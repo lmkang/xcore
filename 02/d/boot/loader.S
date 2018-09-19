@@ -124,7 +124,7 @@ try_88_mem:
 mem_get_error:
 	hlt
 	jmp mem_get_error
-mem_get_ok
+mem_get_ok:
 	mov [total_mem_bytes], edx
 
 	;1、打开A20Gate
