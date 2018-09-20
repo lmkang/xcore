@@ -137,3 +137,61 @@ put_str:
 	pop ecx
 	pop ebx
 	ret
+	
+global put_int
+;以16进制形式打印32位无符号整型,不带"0x"前缀,以小写显示
+;参数:32位整型
+put_int:
+	pushad
+	mov eax, [esp + 4 * 9] ;获取栈中参数
+	mov edx, eax ;备份eax
+	and eax, 0xffffffff
+	cmp eax, 0
+	jz .is_zero
+	mov cl, 28
+	;esi标识整型前缀是否为0
+	;0代表前缀是0,1代表前缀不是0
+	mov esi, 0
+	mov eax, edx
+	shr eax, 28
+	and eax, 0xf
+	or esi, eax
+;遍历栈中的整型数值
+.each_int:
+	cmp cl, 0
+	jl .int_end
+	mov eax, edx
+	shr eax, cl
+	sub cl, 4
+	and eax, 0xf
+	mov edi, eax ;备份eax
+	or eax, esi
+	cmp eax, 0
+	jz .each_int ;前缀为0,当前数也为0,不输出
+	mov eax, edi ;恢复eax
+	mov esi, 1 ;前缀不是0,把esi置为1
+	cmp eax, 10
+	jle .is_digit
+	;字母a-f
+	sub eax, 10
+	add eax, 0x61 ;0x61是'a'的ASCII
+	push eax
+	call put_char
+	add esp, 4
+	jmp .each_int
+;数字0-9
+.is_digit:
+	add eax, 0x30 ;0x30是'0'的ASCII
+	push eax
+	call put_char
+	add esp, 4
+	jmp .each_int
+.is_zero:
+	add eax, 0x30 ;0x30是'0'的ASCII
+	push eax
+	call put_char
+	add esp, 4
+.int_end:
+	;恢复环境,返回
+	popad
+	ret
