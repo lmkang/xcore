@@ -186,6 +186,7 @@ put_int:
 	call put_char
 	add esp, 4
 	jmp .each_int
+;栈中的整型数值为0
 .is_zero:
 	add eax, 0x30 ;0x30是'0'的ASCII
 	push eax
