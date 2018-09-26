@@ -9,12 +9,12 @@ CFLAGS = $(INCLUDES) -m32 -Wall -W -std=c99 -fno-builtin
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_ADDR) -e main -Map $(BUILD_DIR)/kernel.map
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/string.o \
-$(BUILD_DIR)/debug.o $(BUILD_DIR)/print.o
+$(BUILD_DIR)/memory.o $(BUILD_DIR)/bitmap.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/print.o
 TARGET_NAME = xcore.img
 
 ################### C代码编译 ################
 $(BUILD_DIR)/main.o : kernel/main.c lib/kernel/print.h lib/stdint.h \
-kernel/init.h lib/string.h kernel/debug.h
+kernel/init.h kernel/memory.h lib/string.h kernel/debug.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/init.o : kernel/init.c lib/kernel/print.h \
@@ -34,6 +34,14 @@ lib/stdint.h kernel/interrupt.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/string.o : lib/string.c lib/stdint.h kernel/debug.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/bitmap.o : lib/kernel/bitmap.c lib/stdint.h \
+kernel/global.h lib/string.h kernel/debug.h lib/kernel/bitmap.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/memory.o : kernel/memory.c lib/stdint.h lib/kernel/print.h \
+kernel/memory.h lib/kernel/bitmap.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 ################### 汇编代码编译 ################

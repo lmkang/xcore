@@ -1,6 +1,7 @@
 #include "stdint.h"
 #include "memory.h"
 #include "print.h"
+#include "bitmap.h"
 
 #define PAGE_SIZE 4096
 
@@ -88,7 +89,7 @@ static void init_mem_pool(uint32_t all_mem) {
 // 内存管理部分初始化入口
 void init_memory() {
 	put_str("init_memory start\n");
-	uint32_t mem_total_bytes = (*(uint32_t) (0xb00)); // 之前获取的物理内存容量发在此处
+	uint32_t mem_total_bytes = (*(uint32_t*) (0xb00)); // 之前获取的物理内存容量发在此处
 	init_mem_pool(mem_total_bytes);
 	put_str("init_memory done\n");
 }

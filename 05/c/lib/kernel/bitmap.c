@@ -2,6 +2,7 @@
 #include "global.h"
 #include "string.h"
 #include "debug.h"
+#include "bitmap.h"
 
 #define BITMAP_MASK 1
 
@@ -11,7 +12,7 @@ void init_bitmap(struct bitmap *btmp) {
 }
 
 // 判断bit_idx位是否为1,若为1,返回true,否则返回false
-bool test_bitmap(struct bitmap * btmp, uint32_t bit_idx) {
+bool test_bitmap(struct bitmap *btmp, uint32_t bit_idx) {
 	uint32_t byte_idx = bit_idx / 8; // 向下取整,索引数组下标
 	uint32_t bit_mod = bit_idx % 8; // 取余,索引数组内的位
 	return (btmp->bits[byte_idx] & (BITMAP_MASK << bit_mod));
@@ -57,7 +58,7 @@ int alloc_bitmap(struct bitmap *btmp, uint32_t count) {
 }
 
 // 设置位图btmp的bit_idx位
-void set_bitmap(struct bitmap * btmp, uint32_t bit_idx, int8_t value) {
+void set_bitmap(struct bitmap *btmp, uint32_t bit_idx, int8_t value) {
 	ASSERT((value == 0) || (value == 1));
 	uint32_t byte_idx = bit_idx / 8; // 向下取整,索引数组下标
 	uint32_t bit_mod = bit_idx %8; // 取余,索引数组内的位

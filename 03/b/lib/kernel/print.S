@@ -171,7 +171,7 @@ put_int:
 	mov eax, edi ;恢复eax
 	mov esi, 1 ;前缀不是0,把esi置为1
 	cmp eax, 10
-	jle .is_digit
+	jl .is_digit
 	;字母a-f
 	sub eax, 10
 	add eax, 0x61 ;0x61是'a'的ASCII
