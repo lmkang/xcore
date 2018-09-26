@@ -1,14 +1,14 @@
 #include "print.h"
 #include "init.h"
-#include "string.h"
+#include "memory.h"
 
 int main() {
 	put_str("hello,kernel!\n");
 	init_all();
-	char dst[20] = "hello,";
-	char *src = "world!\n";
-	strcat(dst, src);
-	put_str(dst);
+	void *addr = alloc_kernel_page(3);
+	put_str("alloc_kernel_page start vaddr is ");
+	put_int((uint32_t) addr);
+	put_str("\n");
 	while(1) {
 		
 	}

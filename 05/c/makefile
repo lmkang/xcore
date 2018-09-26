@@ -41,7 +41,7 @@ kernel/global.h lib/string.h kernel/debug.h lib/kernel/bitmap.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/memory.o : kernel/memory.c lib/stdint.h lib/kernel/print.h \
-kernel/memory.h lib/kernel/bitmap.h
+kernel/memory.h lib/kernel/bitmap.h kernel/global.h lib/string.h kernel/debug.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 ################### 汇编代码编译 ################
