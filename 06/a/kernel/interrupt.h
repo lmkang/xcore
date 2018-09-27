@@ -15,4 +15,5 @@ enum intr_status get_intr_status(void);
 void set_intr_status(enum intr_status);
 void enable_intr(void);
 void disable_intr(void);
+void register_handler(uint8_t vec_no, intr_handler func)
 #endif

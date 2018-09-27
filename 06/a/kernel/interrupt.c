@@ -70,15 +70,34 @@ static void init_pic(void) {
 }
 
 // 通用的中断处理函数,一般用在异常出现时的处理
-static void general_intr_handler(uint8_t vector_num) {
+static void general_intr_handler(uint8_t vec_no) {
 	// IRQ7和IRQ15会产生伪中断,无需处理
 	// 0x2f是从片8259A上的最后一个IRQ引脚,保留项
-	if(vector_num == 0x27 || vector_num == 0x2f) {
+	if(vec_no == 0x27 || vec_no == 0x2f) {
 		return;
 	}
-	put_str("int vector : 0x");
-	put_int(vector_num);
-	put_char('\n');
+	// 将光标位置设为0,从屏幕左上角清出一片打印异常信息的区域,方便阅读
+	set_cursor(0);
+	int cursor_pos = 0;
+	while(cursor_pos < 320) {
+		put_char(' ');
+		++cursor_pos;
+	}
+	set_cursor(0);
+	put_str("!!! exception message begin !!!\n");
+	put_str(intr_name[vec_no]);
+	put_str("\n");
+	if(vec_no == 0xe) { // 如果是pagefault,将缺失的地址打印
+		int page_fault_vaddr = 0;
+		__asm__("movl %%cr2, %0" : "=r"(page_fault_vaddr)); // cr2存放page_fault的地址
+		put_str("page fault addr is ");
+		put_int(page_fault_vaddr);
+		put_str("\n");
+	}
+	put_str("!!! exception message end !!!\n");
+	// 能进入中断处理程序就表示已经处在关中断的情况下
+	// 因此不会出现调度进程的情况,故下面的死循环不会再被中断
+	while(1);
 }
 
 // 初始化一般中断处理函数注册和异常名称注册
@@ -120,6 +139,11 @@ void init_idt(void) {
 	uint64_t idt_operand = ((sizeof(idt) - 1) | ((uint64_t) (uint32_t) idt << 16));
 	__asm__ __volatile__("lidt %0" : : "m"(idt_operand));
 	put_str("init_idt done\n");
+}
+
+// 在中断处理程序数组第vec_no个元素中注册中断处理程序func
+void register_handler(uint8_t vec_no, intr_handler func) {
+	idt_table[vec_no] = func;
 }
 
 // 开中断并返回开中断前的状态
