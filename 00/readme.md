@@ -34,4 +34,4 @@ mount -t vboxsf linuxshare /usr/local/winshare
 gcc -m32 -c -o main.o main.c
 ld main.o -melf_i386 -Ttext 0xc0001500 -e main -o kernel.bin
 ```
-&emsp;每个工程的根目录（和Makefile同级）应该有一个build目录，由于该目录为空，在上传的时候，被丢弃了，所以在测试的时候请手动加上build目录，不然编译可能会报错。
+&emsp;每个工程的根目录（和Makefile同级）应该有一个build目录，由于该目录为空，在上传的时候，被丢弃了，所以在测试的时候请手动加上build目录，不然编译可能会报错。在05及之后的工程就不需要手动添加build目录了，因为会真正使用makefile和shell命令，而不像现在只是用makefile作为批处理使用。
