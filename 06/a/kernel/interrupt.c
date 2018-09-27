@@ -124,23 +124,15 @@ void init_idt(void) {
 
 // 开中断并返回开中断前的状态
 void enable_intr(void) {
-	enum intr_status old_status;
-	if(INTR_ON == get_intr_status()) {
-		old_status = INTR_ON;
-	} else {
-		old_status = INTR_OFF;
+	if(INTR_OFF == get_intr_status()) {
 		__asm__ __volatile__("sti");
 	}
 }
 
 // 关中断并返回关中断前的状态
 void disable_intr(void) {
-	enum intr_status old_status;
 	if(INTR_ON == get_intr_status()) {
-		old_status = INTR_ON;
 		__asm__ __volatile__("cli" : : : "memory");
-	} else {
-		old_status = INTR_OFF;
 	}
 }
 
