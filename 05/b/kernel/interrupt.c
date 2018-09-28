@@ -122,14 +122,14 @@ void init_idt(void) {
 	put_str("init_idt done\n");
 }
 
-// 开中断并返回开中断前的状态
+// 开中断
 void enable_intr(void) {
 	if(INTR_OFF == get_intr_status()) {
 		__asm__ __volatile__("sti");
 	}
 }
 
-// 关中断并返回关中断前的状态
+// 关中断
 void disable_intr(void) {
 	if(INTR_ON == get_intr_status()) {
 		__asm__ __volatile__("cli" : : : "memory");
