@@ -3,6 +3,10 @@
 #include "string.h"
 #include "global.h"
 #include "memory.h"
+#include "interrupt.h"
+#include "interrupt.h"
+#include "debug.h"
+#include "list.h"
 
 #define PAGE_SIZE 4096
 
@@ -95,50 +99,34 @@ static void create_main_thread(void) {
 	list_append(&thread_all_list, &main_thread->all_list_tag);
 }
 
-// 实现任务调度
-void schedule() {
-	
+// 初始化线程环境
+void thread_init(void) {
+	put_str("thread_init start\n");
+	list_init(&thread_ready_list);
+	list_init(&thread_all_list);
+	create_main_thread();
+	put_str("thread_init done\n");
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 实现任务调度
+void schedule(void) {
+	ASSERT(get_intr_status() == INTR_OFF);
+	struct task_struct *cur_thread = current_thread();
+	if(cur_thread->status == TASK_RUNNING) {
+		// 若此线程只是时间片到了,将其加入到就绪队列尾
+		ASSERT(!has_ele(&thread_ready_list, &cur_thread->general_tag));
+		list_append(&thread_ready_list, &cur_thread->general_tag);
+		cur_thread->ticks = cur_thread->priority;
+		cur_thread->status = TASK_READY;
+	} else {
+		// 若此线程需要某事件发生后才能继续上CPU运行
+		// 不需要将其加入队列,因为当前线程不在就绪队列
+	}
+	ASSERT(!list_empty(&thread_ready_list));
+	thread_tag = NULL; // 清空thread_tag
+	// 将thread_ready_list队列中的第一个就绪线程弹出,将其调度上CPU
+	thread_tag = list_pop(&thread_ready_list);
+	struct task_struct *next_task = ele2entry(struct task_struct, general_tag, thread_tag);
+	next_task->status = TASK_RUNNING;
+	switch_to(cur_thread, next_task);
+}

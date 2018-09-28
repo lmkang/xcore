@@ -3,7 +3,7 @@
 #include "global.h"
 #include "stdint.h"
 
-#define offset(struct_type, member_name) (int) (&((struct_type*) 0)->member)
+#define offset(struct_type, member_name) (int) (&((struct_type*) 0)->member_name)
 
 #define ele2entry(struct_type, member_name, ele_ptr) \
 (struct_type*) ((int) ele_ptr - offset(struct_type, member_name))
@@ -44,6 +44,6 @@ uint32_t list_len(struct list *plist);
 
 struct list_ele * list_traversal(struct list *plist, list_func func, int arg);
 
-bool has_ele(struct list *plist, list_ele *ele);
+bool has_ele(struct list *plist, struct list_ele *ele);
 
 #endif

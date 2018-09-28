@@ -85,6 +85,7 @@ static void general_intr_handler(uint8_t vec_no) {
 	}
 	set_cursor(0);
 	put_str("!!! exception message begin !!!\n");
+	set_cursor(88); // 从第2行第8个字符开始打印
 	put_str(intr_name[vec_no]);
 	put_str("\n");
 	if(vec_no == 0xe) { // 如果是pagefault,将缺失的地址打印

@@ -35,7 +35,7 @@ void list_remove(struct list_ele *ele) {
 	enum intr_status old_status = get_intr_status();
 	disable_intr();
 	ele->prev->next = ele->next;
-	ele->next-prev = ele->prev;
+	ele->next->prev = ele->prev;
 	set_intr_status(old_status);
 }
 
