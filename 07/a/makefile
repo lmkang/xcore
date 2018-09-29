@@ -3,7 +3,7 @@ ENTRY_ADDR = 0xc0001500
 AS = nasm
 CC = gcc
 LD = ld
-INCLUDES = -I lib/ -I lib/kernel/ -I kernel/ -I device/ -I thread/
+INCLUDES = -I lib/ -I lib/kernel/ -I kernel/ -I device/ -I thread/ -I user/
 ASFLAGS = -f elf
 CFLAGS = $(INCLUDES) -m32 -Wall -W -std=c99 -fno-builtin
 LDFLAGS = -melf_i386 -Ttext $(ENTRY_ADDR) -e main -Map $(BUILD_DIR)/kernel.map
@@ -11,7 +11,8 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/string.o \
 $(BUILD_DIR)/memory.o $(BUILD_DIR)/bitmap.o $(BUILD_DIR)/switch.o \
 $(BUILD_DIR)/console.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/list.o \
-$(BUILD_DIR)/debug.o $(BUILD_DIR)/print.o $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o
+$(BUILD_DIR)/debug.o $(BUILD_DIR)/print.o $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o \
+$(BUILD_DIR)/tss.o
 TARGET_NAME = xcore.img
 
 ################### C代码编译 ################
@@ -22,6 +23,7 @@ device/console.h device/ioqueue.h device/keyboard.h
 
 $(BUILD_DIR)/init.o : kernel/init.c lib/kernel/print.h \
 lib/stdint.h kernel/interrupt.h device/timer.h device/console.h \
+device/timer.h thread/thread.h user/tss.h device/keyboard.h \
 device/keyboard.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
@@ -68,6 +70,10 @@ kernel/global.h lib/kernel/x86.h device/keyboard.h
 
 $(BUILD_DIR)/ioqueue.o : device/ioqueue.c device/ioqueue.h kernel/interrupt.h \
 kernel/global.h kernel/debug.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/tss.o : user/tss.c lib/stdint.h thread/thread.h kernel/global.h \
+lib/kernel/print.h lib/string.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 ################### 汇编代码编译 ################

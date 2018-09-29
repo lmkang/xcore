@@ -59,107 +59,24 @@ static struct gdt_desc create_gdt_desc(uint32_t *desc_addr, uint32_t limit,
 }
 
 // 在GDT中创建TSS并重新加载GDT
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void tss_init() {
+	put_str("tss_init start\n");
+	uint32_t tss_size = sizeof(tss);
+	memset(&tss, 0, tss_size);
+	tss.ss0 = SELECTOR_KERNEL_STACK;
+	tss.io_base = tss_size;
+	// gdt段基址为0x900,把TSS放到第4个位置,也就是0x900 + 0x20
+	// 在gdt中添加DPL为0的TSS描述符
+	*((struct gdt_desc*) 0xc0000920) = create_gdt_desc((uint32_t*) &tss, 
+		tss_size - 1, TSS_ATTR_LOW, TSS_ATTR_HIGH);
+	// 在gdt中添加DPL为3的数据段和代码段描述符
+	*((struct gdt_desc*) 0xc0000928) = create_gdt_desc((uint32_t*) 0, 
+		0xfffff, GDT_CODE_ATTR_LOW_DPL3, GDT_ATTR_HIGH);
+	*((struct gdt_desc*) 0xc0000930) = create_gdt_desc((uint32_t*) 0,
+		0xfffff, GDT_DATA_ATTR_LOW_DPL3, GDT_ATTR_HIGH);
+	// gdt 16位的limit 32位的段基址
+	uint64_t gdt_operand = (8 * 7 - 1) | ((uint64_t) (uint32_t) 0xc0000900 << 16); // 7个描述符大小
+	__asm__ __volatile__("lgdt %0" : : "m"(gdt_operand));
+	__asm__ __volatile__("ltr %w0" : : "r"(SELECTOR_TSS));
+	put_str("tss_init and ltr done\n");
+}

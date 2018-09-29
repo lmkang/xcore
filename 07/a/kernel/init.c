@@ -5,6 +5,7 @@
 #include "thread.h"
 #include "console.h"
 #include "keyboard.h"
+#include "tss.h"
 
 // 初始化所有模块
 void init_all() {
@@ -15,4 +16,5 @@ void init_all() {
 	init_timer(); // 初始化PIT
 	console_init(); // 初始化控制台,最好放在开中断之前
 	keyboard_init(); // 初始化键盘
+	tss_init(); // 初始化TSS
 }

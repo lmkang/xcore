@@ -1,5 +1,6 @@
 #ifndef __KERNEL_GLOBAL_H
 #define __KERNEL_GLOBAL_H
+#include "stdint.h"
 
 // -------------- GDT描述符属性 ----------------
 #define DESC_G_4K 1
