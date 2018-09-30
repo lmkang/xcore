@@ -33,7 +33,7 @@ void process_start(void *filename) {
 	proc_stack->es = SELECTOR_USER_DATA;
 	proc_stack->fs = SELECTOR_USER_DATA;
 	proc_stack->eip = filename;
-	proc_stack->cs = SELECTOR_USER_DATA;
+	proc_stack->cs = SELECTOR_USER_CODE;
 	proc_stack->eflags = (EFLAGS_IOPL_0 | EFLAGS_MBS | EFLAGS_IF_1);
 	proc_stack->esp = (void*) ((uint32_t) get_a_page(PF_USER, USER_STACK3_VADDR) + PAGE_SIZE);
 	proc_stack->ss = SELECTOR_USER_DATA;
