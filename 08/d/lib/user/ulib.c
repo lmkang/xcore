@@ -1,13 +1,22 @@
 #include "stdint.h"
-#include "stdio.h"
+#include "syscall.h"
+#include "ulib.h"
 #include "global.h"
 #include "string.h"
-#include "unistd.h"
-#include "syscall.h"
 
 #define va_start(ap, v) ap = (va_list) &v
 #define va_arg(ap, t) *((t*) (ap += 4))
 #define va_end(ap) ap = NULL
+
+// 获取进程pid
+uint32_t getpid() {
+	return _syscall0(SYS_GETPID);
+}
+
+// 打印字符串
+uint32_t write(char *str) {
+	return _syscall1(SYS_WRITE, str);
+}
 
 // 将整型转换成字符
 static void itoa(uint32_t value, char **buf, uint8_t base) {

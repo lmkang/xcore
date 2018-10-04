@@ -6,11 +6,9 @@
 #include "ioqueue.h"
 #include "keyboard.h"
 #include "process.h"
-#include "unistd.h"
-#include "stdio.h"
 #include "syscall.h"
 #include "memory.h"
-#include "stdlib.h"
+#include "ulib.h"
 
 void k_thread_a(void*);
 

@@ -12,15 +12,14 @@ $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/st
 $(BUILD_DIR)/memory.o $(BUILD_DIR)/bitmap.o $(BUILD_DIR)/switch.o \
 $(BUILD_DIR)/console.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/list.o \
 $(BUILD_DIR)/debug.o $(BUILD_DIR)/print.o $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o \
-$(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o $(BUILD_DIR)/unistd.o \
-$(BUILD_DIR)/ulib.o
+$(BUILD_DIR)/tss.o $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o $(BUILD_DIR)/ulib.o
 TARGET_NAME = xcore.img
 
 ################### C代码编译 ################
 $(BUILD_DIR)/main.o : kernel/main.c lib/kernel/print.h lib/stdint.h \
 kernel/init.h kernel/memory.h lib/string.h kernel/debug.h thread/thread.h \
 device/console.h device/ioqueue.h device/keyboard.h user/process.h \
-lib/user/unistd.h lib/stdio.h lib/stdlib.h
+lib/user/ulib.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/init.o : kernel/init.c lib/kernel/print.h \
@@ -87,11 +86,8 @@ kernel/debug.h user/tss.h
 $(BUILD_DIR)/syscall.o : lib/kernel/syscall.c lib/kernel/syscall.h lib/stdint.h thread/thread.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/unistd.o : lib/user/unistd.c lib/kernel/syscall.h lib/stdint.h
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/ulib.o : lib/ulib.c lib/stdint.h lib/stdio.h kernel/global.h lib/string.h \
-lib/user/unistd.h lib/kernel/syscall.h
+$(BUILD_DIR)/ulib.o : lib/user/ulib.c lib/stdint.h kernel/global.h lib/string.h \
+lib/user/ulib.h lib/kernel/syscall.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 ################### 汇编代码编译 ################
