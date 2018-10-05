@@ -101,8 +101,8 @@ static void write_sector(struct disk *disk, void *buf, uint8_t sector_count) {
 // 等待30秒
 static bool busy_wait(struct disk *disk) {
 	struct ide_channel *channel = disk->channel;
-	uint16_t time = 30 * 1000; // 30 * 1000毫秒
-	while(time -= 10 >= 0) {
+	int16_t time = 30 * 1000; // 30 * 1000毫秒
+	while((time -= 10) >= 0) {
 		if(!(inb(reg_status(channel)) & BIT_STAT_BSY)) {
 			return inb(reg_status(channel)) & BIT_STAT_DRQ;
 		} else {

@@ -26,7 +26,7 @@ lib/user/ulib.h
 $(BUILD_DIR)/init.o : kernel/init.c lib/kernel/print.h \
 lib/stdint.h kernel/interrupt.h device/timer.h device/console.h \
 device/timer.h thread/thread.h user/tss.h device/keyboard.h \
-device/keyboard.h lib/kernel/syscall.h
+device/keyboard.h lib/kernel/syscall.h device/ide.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/interrupt.o : kernel/interrupt.c lib/stdint.h \
