@@ -9,6 +9,53 @@
 #include "debug.h"
 #include "inode.h"
 
+// 默认情况下操作的分区
+struct partition *cur_part;
+
+// 在分区链表中找到名为part_name的分区,并将其指针赋值给cur_part
+static bool mount_partition(struct list_ele *pele, int arg) {
+	char *part_name = (char*) arg;
+	struct partition *part = ele2entry(struct partition, part_tag, pele);
+	if(!strcmp(part->name, part_name)) {
+		cur_part = part;
+		struct disk *disk = cur_part->disk;
+		// sp_block用来存储从硬盘上读入的超级块
+		struct super_block *sp_block = (struct super_block*) sys_malloc(SECTOR_SIZE);
+		// 在内存中创建分区cur_part的超级块
+		cur_part->sp_block = (struct super_block*) sys_malloc(sizeof(struct super_block));
+		if(cur_part->sp_block == NULL) {
+			PANIC("alloc memory failed!");
+		}
+		// 读入超级块
+		memset(sp_block, 0, SECTOR_SIZE);
+		ide_read(disk, cur_part->start_lba + 1, sp_block, 1);
+		// 把sp_block中超级块的信息复制到分区的超级块sp_block中
+		memcpy(cur_part->sp_block, sp_block, sizeof(struct super_block));
+		// 将硬盘上的块位图读入到内存
+		cur_part->block_btmp.bits = (uint8_t*) sys_malloc(sp_block->block_btmp_secs * SECTOR_SIZE);
+		if(cur_part->block_btmp.bits == NULL) {
+			PANIC("alloc memory failed!");
+		}
+		cur_part->block_btmp.byte_len = sp_block->block_btmp_secs * SECTOR_SIZE;
+		// 从硬盘上读入块位图到分区的block_btmp.bits
+		ide_read(disk, sp_block->block_btmp_lba, cur_part->block_btmp.bits, sp_block->block_btmp_secs);
+		// 将硬盘上的inode位图读入到内存
+		cur_part->inode_btmp.bits = (uint8_t*) sys_malloc(sp_block->inode_btmp_secs * SECTOR_SIZE);
+		if(cur_part->inode_btmp.bits == NULL) {
+			PANIC("alloc memory failed!");
+		}
+		cur_part->inode_btmp.byte_len = sp_block->inode_btmp_secs * SECTOR_SIZE;
+		// 从硬盘上读入inode位图到分区的inode_btmp.bits
+		ide_read(disk, sp_block->inode_btmp_lba, cur_part->inode_btmp.bits, sp_block->inode_btmp_secs);
+		list_init(&cur_part->open_inodes);
+		printk("mount %s done!\n", part->name);
+		// 此处返回true是为了迎合主调函数list_traversal的实现,与函数功能无关
+		// 只有返回true时list_traversal才会停止遍历,减少后面元素无意义的遍历
+		return true;
+	}
+	return false; // 返回false让list_traversal停止遍历
+}
+
 // 格式化分区,也就是初始化分区的元信息,创建文件系统
 static void partition_format(struct partition *part) {
 	// blocks_btmp_init(为方便实现,一个块大小是一扇区)
@@ -161,4 +208,8 @@ void fs_init() {
 		++channel_no; // 下一通道
 	}
 	sys_free(sp_block);
+	// 确定默认操作的分区
+	char default_part[] = "sdb1";
+	// 挂载分区
+	list_traversal(&partition_list, mount_partition, (int) default_part);
 }
