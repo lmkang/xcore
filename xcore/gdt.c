@@ -2,10 +2,13 @@
 
 #define GDT_ENTRY_COUNT 6
 
+// gdt数组
 struct gdt_entry gdt_entries[GDT_ENTRY_COUNT];
-struct gdt_ptr gdt_ptr;
+// gdt指针
+struct gdt_ptr *gdt_ptr;
 
-extern void flush_gdt(struct gdt_ptr gdt_ptr);
+// 刷新gdt
+extern void flush_gdt(uint32_t);
 
 // 设置段描述符
 static void set_gdt_entry(uint16_t index, uint32_t base, uint32_t limit, 
@@ -25,8 +28,8 @@ static void set_gdt_entry(uint16_t index, uint32_t base, uint32_t limit,
 
 // 初始化gdt
 void init_gdt() {
-	gdt_ptr.limit = (sizeof(gdt_entries) * GDT_ENTRY_COUNT) - 1;
-	gdt_ptr.base = (uint32_t) &gdt_entries;
+	gdt_ptr->limit = (sizeof(gdt_entries) * GDT_ENTRY_COUNT) - 1;
+	gdt_ptr->base = (uint32_t) &gdt_entries;
 	
 	set_gdt_entry(0, 0, 0, 0, 0); // Null segment
 	set_gdt_entry(1, 0, 0xffffffff, 0x9a, 0xcf); // Code segment
@@ -35,5 +38,5 @@ void init_gdt() {
 	set_gdt_entry(4, 0, 0xffffffff, 0xfa, 0xcf); // User mode code segment
 	set_gdt_entry(5, 0, 0xffffffff, 0xf2, 0xcf); // User mode data segment
 	
-	flush_gdt(gdt_ptr);
+	flush_gdt((uint32_t) gdt_ptr);
 }

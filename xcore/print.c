@@ -48,20 +48,17 @@ void put_char(uint8_t ch) {
 		scroll((cursor_pos / 80 + 1) * 80, video_ptr);
 	} else if(ch == '\t') { // tab
 		// 显示4个空格
-		for(uint8_t i = 1; i <= 4; i++) {
-			video_ptr += (cursor_pos + i);
-			*video_ptr = (0x0f << 8) | 0x20;
+		for(uint8_t i = 0; i < 4; i++) {
+			*(video_ptr + cursor_pos + i) = (0x0f << 8) | 0x20;
 			// 滚动屏幕
 			scroll(cursor_pos + i, video_ptr);
 		}
 	} else if(ch == '\b') { // backspace
 		// 光标前移,用空格覆盖
-		video_ptr += (cursor_pos - 1);
-		*video_ptr = (0x0f << 8) | 0x20;
+		*(video_ptr + cursor_pos - 1) = (0x0f << 8) | 0x20;
 	} else {
 		// 显示字符
-		video_ptr += cursor_pos;
-		*video_ptr = (0x0f << 8) | ch;
+		*(video_ptr + cursor_pos) = (0x0f << 8) | ch;
 		// 滚动屏幕
 		scroll(cursor_pos + 1, video_ptr);
 	}
@@ -71,8 +68,7 @@ void put_char(uint8_t ch) {
 void put_str(char *str) {
 	char *p = str;
 	while(*p != '\0') {
-		put_char(*p);
-		++p;
+		put_char(*p++);
 	}
 }
 
