@@ -19,10 +19,7 @@ uint16_t get_cursor() {
 	return (cursor_high << 8) | cursor_low;
 }
 
-// 输出一个字符
-void put_char(uint8_t ch) {
-	uint16_t *video_ptr = (uint16_t*) 0xb8000;
-	uint16_t cursor_pos = get_cursor(); // 获取光标位置
+static void scroll(uint16_t cursor_pos, uint16_t *video_ptr) {
 	// 超出最后一行一列
 	if(cursor_pos >= 80 * 25) {
 		// 1-24行 --> 0-23行
@@ -35,13 +32,39 @@ void put_char(uint8_t ch) {
 		}
 		// 设置光标位置为24行行首
 		set_cursor(24 * 80);
-		cursor_pos = 24 * 80;
+	} else {
+		// 设置光标位置
+		set_cursor(cursor_pos);
 	}
-	// 显示字符
-	video_ptr += cursor_pos;
-	*video_ptr = (0x0f << 8) | ch; // bgcolor:black,fgcolor:white
-	// 光标后移
-	set_cursor(cursor_pos + 1);
+}
+
+// 输出一个字符
+void put_char(uint8_t ch) {
+	uint16_t *video_ptr = (uint16_t*) 0xb8000;
+	uint16_t cursor_pos = get_cursor(); // 获取光标位置
+	// 字符处理,bgcolor:black,fgcolor:white
+	if(ch == '\n') { // carriage return
+		// 滚动屏幕,光标换到下一行行首
+		scroll((cursor_pos / 80 + 1) * 80, video_ptr);
+	} else if(ch == '\t') { // tab
+		// 显示4个空格
+		for(uint8_t i = 1; i <= 4; i++) {
+			video_ptr += (cursor_pos + i);
+			*video_ptr = (0x0f << 8) | 0x20;
+			// 滚动屏幕
+			scroll(cursor_pos + i, video_ptr);
+		}
+	} else if(ch == '\b') { // backspace
+		// 光标前移,用空格覆盖
+		video_ptr += (cursor_pos - 1);
+		*video_ptr = (0x0f << 8) | 0x20;
+	} else {
+		// 显示字符
+		video_ptr += cursor_pos;
+		*video_ptr = (0x0f << 8) | ch;
+		// 滚动屏幕
+		scroll(cursor_pos + 1, video_ptr);
+	}
 }
 
 // 输出一个字符串

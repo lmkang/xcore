@@ -1,7 +1,7 @@
 #include "print.h"
 
 int main(struct multiboot *mboot_prt) {
-	put_str("hello,kernel! \n");
+	put_str("hello,kernel!a\b\ta99999999999999999999999999999999999999999999999999999999\n");
 	put_hex(0);
 	put_char(' ');
 	put_hex(0x12345678);
