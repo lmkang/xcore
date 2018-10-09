@@ -1,13 +1,29 @@
 #include "print.h"
 #include "init.h"
+#include "interrupt.h"
+#include "multiboot.h"
 
-int main(struct multiboot *mboot_prt) {
+#define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
+
+void show_mmap(struct multiboot *mboot_ptr) {
+	uint32_t *mem_size_addr = (uint32_t *) 0x90000;
+	if (CHECK_FLAG(mboot_ptr->flags, 0)) {
+        *mem_size_addr = (mboot_ptr->mem_lower * 1024) + (mboot_ptr->mem_upper * 1024);
+        put_str("Total Memory: ");
+        put_hex((*mem_size_addr) / (1024 * 1024) + 1);
+		put_str("MB\n");
+    }
+}
+
+int main(struct multiboot *mboot_ptr) {
 	init_all();
 	
-	enable_intr();
-	__asm__ __volatile__("int $20");
+	//enable_intr();
+	//__asm__ __volatile__("int $20");
 	
 	put_str("hello, kernel!\n");
+	
+	show_mmap(mboot_ptr);
 	
 	return 0;
 }

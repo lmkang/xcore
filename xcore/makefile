@@ -8,7 +8,7 @@ LD_FLAGS = -melf_i386 -nostdlib -Tlink.ld
 INCLUDES = 
 OBJS = $(BUILD_DIR)/boot.o $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o \
 	$(BUILD_DIR)/gdt.o $(BUILD_DIR)/init.o $(BUILD_DIR)/gdtasm.o \
-	$(BUILD_DIR)/interrupt.o $(BUILD_DIR)/intrasm.o
+	$(BUILD_DIR)/interrupt.o $(BUILD_DIR)/idtasm.o $(BUILD_DIR)/putchar.o
 TARGET_NAME = kernel
 
 $(BUILD_DIR)/main.o : main.c
@@ -17,8 +17,8 @@ $(BUILD_DIR)/main.o : main.c
 $(BUILD_DIR)/boot.o : boot.S
 	$(AS) $(AS_FLAGS) -o $@ $<
 
-$(BUILD_DIR)/print.o : print.S
-	$(AS) $(AS_FLAGS) -o $@ $<
+$(BUILD_DIR)/print.o : print.c
+	$(CC) $(C_FLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/gdt.o : gdt.c
 	$(CC) $(C_FLAGS) -c -o $@ $<
@@ -32,7 +32,10 @@ $(BUILD_DIR)/gdtasm.o : gdtasm.S
 $(BUILD_DIR)/interrupt.o : interrupt.c
 	$(CC) $(C_FLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/intrasm.o : intrasm.S
+$(BUILD_DIR)/idtasm.o : idtasm.S
+	$(AS) $(AS_FLAGS) -o $@ $<
+
+$(BUILD_DIR)/putchar.o : putchar.S
 	$(AS) $(AS_FLAGS) -o $@ $<
 
 $(BUILD_DIR)/$(TARGET_NAME) : $(OBJS)

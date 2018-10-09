@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+uint16_t get_cursor();
+
 void set_cursor(uint16_t cursor_pos);
 
 void put_char(uint8_t ch);
