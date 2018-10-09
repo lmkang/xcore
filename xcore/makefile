@@ -7,7 +7,8 @@ C_FLAGS = -m32 -Wall -W -std=c99 -nostdinc -fno-builtin -fno-stack-protector
 LD_FLAGS = -melf_i386 -nostdlib -Tlink.ld
 INCLUDES = 
 OBJS = $(BUILD_DIR)/boot.o $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o \
-	$(BUILD_DIR)/gdt.o $(BUILD_DIR)/init.o $(BUILD_DIR)/gdtasm.o
+	$(BUILD_DIR)/gdt.o $(BUILD_DIR)/init.o $(BUILD_DIR)/gdtasm.o \
+	$(BUILD_DIR)/printasm.o
 TARGET_NAME = kernel
 
 $(BUILD_DIR)/main.o : main.c
@@ -30,6 +31,9 @@ $(BUILD_DIR)/gdtasm.o : gdtasm.S
 
 $(BUILD_DIR)/$(TARGET_NAME) : $(OBJS)
 	$(LD) $(LD_FLAGS) -o $@ $^
+
+$(BUILD_DIR)/printasm.o : printasm.S
+	$(AS) $(AS_FLAGS) -o $@ $<
 
 .PHONY : makedir build all clean
 

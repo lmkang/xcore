@@ -29,4 +29,5 @@ start:
 	push ebx
 	cli
 	call main
+	add esp, 4
 	jmp $
