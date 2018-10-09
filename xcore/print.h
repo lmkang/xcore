@@ -5,8 +5,6 @@
 
 void set_cursor(uint16_t cursor_pos);
 
-uint16_t get_cursor();
-
 void put_char(uint8_t ch);
 
 void put_str(char *str);
