@@ -13,6 +13,20 @@ void show_mmap(struct multiboot *mboot_ptr) {
         put_hex((*mem_size_addr) / (1024 * 1024) + 1);
 		put_str("MB\n");
     }
+	if(CHECK_FLAG(mboot_ptr->flags, 6)) {
+		uint32_t mmap_addr = mboot_ptr->mmap_addr;
+		uint32_t mmap_length = mboot_ptr->mmap_length;
+		struct mmap_entry *mmap = (struct mmap_entry*) mmap_addr;
+		for(; (uint32_t) mmap < mmap_addr + mmap_length; mmap++) {
+			// base_addr_low + length_low
+			put_str("mmap->base_addr_low: ");
+			put_hex((uint32_t) mmap->base_addr_low);
+			put_char('\n');
+			put_str("mmap->length_low: ");
+			put_hex((uint32_t) mmap->length_low);
+			put_char('\n');
+		}
+	}
 }
 
 int main(struct multiboot *mboot_ptr) {
