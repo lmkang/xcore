@@ -5,6 +5,15 @@
 #include "interrupt.h"
 #include "x86.h"
 
+// idt entry attribute
+#define IDT_ENTRY_P 1
+#define IDT_ENTRY_DPL0 0
+#define IDT_ENTRY_DPL3 3
+#define IDT_ENTRY_32_TYPE 0xe // 32位门
+#define IDT_ENTRY_16_TYPE 0x6 // 16位门,目前用不到
+#define IDT_ENTRY_ATTR_DPL0 ((IDT_ENTRY_P << 7) + (IDT_ENTRY_DPL0 << 5) + IDT_ENTRY_32_TYPE)
+#define IDT_ENTRY_ATTR_DPL3 ((IDT_ENTRY_P << 7) + (IDT_ENTRY_DPL3 << 5) + IDT_ENTRY_32_TYPE)
+
 #define PIC_MASTER_CTRL 0x20 // 主片的控制端口
 #define PIC_MASTER_DATA 0x21 // 主片的数据端口
 #define PIC_SLAVE_CTRL 0xa0 // 从片的控制端口
