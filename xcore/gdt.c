@@ -31,11 +31,15 @@ void init_gdt() {
 	gdt_ptr->limit = (sizeof(gdt_entries) * GDT_ENTRY_COUNT) - 1;
 	gdt_ptr->base = (uint32_t) &gdt_entries;
 	
+	// 0x9a: conforming, 0x98: no-conforming(DPL=00)
+	// 0xfa: conforming, 0xf8: no-conforming(DPL=11)
+	// 0x92: read/write data segment(DPL=00)
+	// 0xf2: read/write data segment(DPL=11)
 	set_gdt_entry(0, 0, 0, 0, 0); // Null segment
-	set_gdt_entry(1, 0, 0xffffffff, 0x9a, 0xcf); // Code segment
+	set_gdt_entry(1, 0, 0xffffffff, 0x98, 0xcf); // Code segment
 	set_gdt_entry(2, 0, 0xffffffff, 0x92, 0xcf); // Data segment
-	set_gdt_entry(3, 0xb8000, 0x7fff, 0x92, 0xcf); // Video segment
-	set_gdt_entry(4, 0, 0xffffffff, 0xfa, 0xcf); // User mode code segment
+	set_gdt_entry(3, 0xb8000, 0x7fff, 0x92, 0xc0); // Video segment
+	set_gdt_entry(4, 0, 0xffffffff, 0xf8, 0xcf); // User mode code segment
 	set_gdt_entry(5, 0, 0xffffffff, 0xf2, 0xcf); // User mode data segment
 	
 	flush_gdt((uint32_t) gdt_ptr);
