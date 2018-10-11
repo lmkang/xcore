@@ -14,5 +14,6 @@ flush_page:
 	mov eax, cr0
 	or eax, 0x80000000
 	mov cr0, eax
+	
 	lgdt [gdt_ptr] ;重新加载gdt_ptr
 	ret

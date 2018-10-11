@@ -9,11 +9,11 @@
 void get_total_mem(struct multiboot *mboot_ptr);
 
 int main(struct multiboot *mboot_ptr) {
-	// 初始化所有模块
-	init_all();
-	
 	// 获取总物理内存容量,存在TOTAL_MEM_SIZE_ADDR地址处
 	get_total_mem(mboot_ptr);
+	
+	// 初始化所有模块
+	init_all();
 	
 	// 打印总物理内存容量
 	put_hex(*((uint32_t *) TOTAL_MEM_SIZE_ADDR));
