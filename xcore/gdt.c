@@ -28,9 +28,6 @@ static void set_gdt_entry(uint16_t index, uint32_t base, uint32_t limit,
 
 // 初始化gdt
 void init_gdt() {
-	gdt_ptr->limit = (sizeof(gdt_entries) * GDT_ENTRY_COUNT) - 1;
-	gdt_ptr->base = (uint32_t) &gdt_entries;
-	
 	// 0x9a: conforming, 0x98: no-conforming(DPL=00)
 	// 0xfa: conforming, 0xf8: no-conforming(DPL=11)
 	// 0x92: read/write data segment(DPL=00)
@@ -41,6 +38,9 @@ void init_gdt() {
 	set_gdt_entry(3, 0xb8000, 0x7fff, 0x92, 0xc0); // Video segment
 	set_gdt_entry(4, 0, 0xffffffff, 0xf8, 0xcf); // User mode code segment
 	set_gdt_entry(5, 0, 0xffffffff, 0xf2, 0xcf); // User mode data segment
+	
+	gdt_ptr->limit = (sizeof(struct gdt_entry) * GDT_ENTRY_COUNT) - 1;
+	gdt_ptr->base = (uint32_t) gdt_entries;
 	
 	flush_gdt((uint32_t) gdt_ptr);
 }

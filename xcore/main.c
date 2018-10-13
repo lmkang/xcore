@@ -16,7 +16,7 @@ int main(struct multiboot *mboot_ptr) {
 	init_all();
 	
 	// 打印总物理内存容量
-	put_hex(*((uint32_t *) TOTAL_MEM_SIZE_ADDR));
+	put_hex(*((uint32_t *) (TOTAL_MEM_SIZE_ADDR + 0xc0000000)));
 	put_str("MB\n");
 	
 	//enable_intr();
