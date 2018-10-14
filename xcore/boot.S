@@ -5,29 +5,27 @@
 	MBOOT_CHECKSUM equ -(MBOOT_HEADER_MAGIC + MBOOT_HEADER_FLAGS)
 	
 [bits 32]
-global mboot
-extern code
-extern bss
-extern end
-
-mboot:
+section .init.text
 	dd MBOOT_HEADER_MAGIC
-	
 	dd MBOOT_HEADER_FLAGS
 	dd MBOOT_CHECKSUM
-	
-	dd mboot
-	dd code
-	dd bss
-	dd end
-	dd start
 
 global start
-extern main
+global glb_mboot_ptr
+extern entry
 
 start:
-	push ebx
 	cli
-	call main
-	add esp, 4
+	mov [glb_mboot_ptr], ebx
+	mov esp, STACK_TOP
+	and esp, 0xfffffff0
+	mov ebp, 0
+	call entry
 	jmp $
+	
+section .init.data
+stack:
+	times 1024 db 0
+	STACK_TOP equ $ - stack - 1
+glb_mboot_ptr:
+	dd 0

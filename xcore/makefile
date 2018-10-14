@@ -6,11 +6,10 @@ AS_FLAGS = -f elf
 C_FLAGS = -m32 -Wall -W -std=c99 -nostdinc -fno-builtin -fno-stack-protector
 LD_FLAGS = -melf_i386 -nostdlib -Tlink.ld
 INCLUDES = 
-OBJS = $(BUILD_DIR)/boot.o $(BUILD_DIR)/main.o $(BUILD_DIR)/print.o \
-	$(BUILD_DIR)/gdt.o $(BUILD_DIR)/init.o $(BUILD_DIR)/gdtasm.o \
-	$(BUILD_DIR)/interrupt.o $(BUILD_DIR)/idtasm.o $(BUILD_DIR)/putchar.o \
-	$(BUILD_DIR)/bitmap.o $(BUILD_DIR)/string.o $(BUILD_DIR)/debug.o \
-	$(BUILD_DIR)/page.o $(BUILD_DIR)/pageasm.o $(BUILD_DIR)/memory.o
+OBJS = $(BUILD_DIR)/boot.o $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o \
+	$(BUILD_DIR)/gdt.o $(BUILD_DIR)/gdtasm.o $(BUILD_DIR)/print.o \
+	$(BUILD_DIR)/putchar.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/idtasm.o \
+	$(BUILD_DIR)/page.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o
 TARGET_NAME = kernel
 
 $(BUILD_DIR)/main.o : main.c
@@ -19,16 +18,19 @@ $(BUILD_DIR)/main.o : main.c
 $(BUILD_DIR)/boot.o : boot.S
 	$(AS) $(AS_FLAGS) -o $@ $<
 
-$(BUILD_DIR)/print.o : print.c
+$(BUILD_DIR)/init.o : init.c
 	$(CC) $(C_FLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/gdt.o : gdt.c
 	$(CC) $(C_FLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/init.o : init.c
+$(BUILD_DIR)/gdtasm.o : gdtasm.S
+	$(AS) $(AS_FLAGS) -o $@ $<
+
+$(BUILD_DIR)/print.o : print.c
 	$(CC) $(C_FLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/gdtasm.o : gdtasm.S
+$(BUILD_DIR)/putchar.o : putchar.S
 	$(AS) $(AS_FLAGS) -o $@ $<
 
 $(BUILD_DIR)/interrupt.o : interrupt.c
@@ -37,25 +39,13 @@ $(BUILD_DIR)/interrupt.o : interrupt.c
 $(BUILD_DIR)/idtasm.o : idtasm.S
 	$(AS) $(AS_FLAGS) -o $@ $<
 
-$(BUILD_DIR)/putchar.o : putchar.S
-	$(AS) $(AS_FLAGS) -o $@ $<
-
-$(BUILD_DIR)/bitmap.o : bitmap.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/string.o : string.c
+$(BUILD_DIR)/page.o : page.c
 	$(CC) $(C_FLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/debug.o : debug.c
 	$(CC) $(C_FLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/page.o : page.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/pageasm.o : pageasm.S
-	$(AS) $(AS_FLAGS) -o $@ $<
-
-$(BUILD_DIR)/memory.o : memory.c
+$(BUILD_DIR)/string.o : string.c
 	$(CC) $(C_FLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/$(TARGET_NAME) : $(OBJS)
