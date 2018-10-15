@@ -17,7 +17,7 @@
 #define PAGE_PTE_SIZE 1024 // 页表项数目
 
 // PDE,PTE,OFFSET
-#define GET_PDE_INDEX(x) (((x) >> 22) & 0x3ff)
+#define GET_PGD_INDEX(x) (((x) >> 22) & 0x3ff)
 #define GET_PTE_INDEX(x)  (((x) >> 12) & 0x3ff)
 #define GET_OFFSET_INDEX(x)  ((x) & 0xfff)
 

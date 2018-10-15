@@ -21,7 +21,7 @@ __attribute__((section(".init.data"))) uint32_t *pte_high = (uint32_t*) 0x3000;
 
 __attribute__((section(".init.text"))) void entry() {
 	pde_tmp[0] = (uint32_t) pte_low | PAGE_RW_W | PAGE_P_1;
-	pde_tmp[GET_PDE_INDEX(KERNEL_OFFSET)] = (uint32_t) pte_high | PAGE_RW_W | PAGE_P_1;
+	pde_tmp[GET_PGD_INDEX(KERNEL_OFFSET)] = (uint32_t) pte_high | PAGE_RW_W | PAGE_P_1;
 	// 4KB / 4B = 1024
 	// 映射虚拟地址0xc0000000-0xc0400000到0x00000000-0x00400000的物理地址
 	// 映射0x00000000-0x00400000的物理地址到虚拟地址0xc0000000-0xc0400000
