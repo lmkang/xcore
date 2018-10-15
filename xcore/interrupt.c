@@ -89,13 +89,13 @@ void* intr_offsets[IDT_ENTRY_COUNT]; // 中断处理函数入口地址数组
 void* intr_handlers[IDT_ENTRY_COUNT]; // 中断处理函数
 
 // 设置中断描述符
-static void set_idt_entry(int index, uint8_t attribute, void *offset) {
-	idt_entries[index].offset_low = (uint32_t) offset & 0x0000ffff;
+static void set_idt_entry(int index, uint8_t attribute, void *intr_func) {
+	idt_entries[index].offset_low = (uint32_t) intr_func & 0x0000ffff;
 	idt_entries[index].selector = SELECTOR_KERNEL_CODE; // 内核代码段选择子
 	idt_entries[index].reserved = 0;
 	idt_entries[index].attribute = attribute;
-	idt_entries[index].offset_high = ((uint32_t) offset & 0xffff0000) >> 16;
-	intr_offsets[index] = offset;
+	idt_entries[index].offset_high = ((uint32_t) intr_func & 0xffff0000) >> 16;
+	intr_offsets[index] = intr_func;
 }
 
 // 初始化中断描述符表

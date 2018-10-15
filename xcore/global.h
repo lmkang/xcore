@@ -10,20 +10,27 @@
 
 // page
 #define PAGE_SIZE 4096
-#define PAGE_P 1
+#define PAGE_P_1 1
 #define PAGE_RW_W 10
 #define PAGE_US_U 100
-#define PDT_BASE_ADDR 0x400000 // page diretory table base address
+#define PAGE_PGD_SIZE 1024 // 页目录项数目
+#define PAGE_PTE_SIZE 1024 // 页表项数目
 
 // PDE,PTE,OFFSET
-#define GET_PDE_NUM(x) (((x) >> 22) & 0x3ff)
-#define GET_PTE_NUM(x)  (((x) >> 12) & 0x3ff)
-#define GET_OFFSET_NUM(x)  ((x) & 0xfff)
+#define GET_PDE_INDEX(x) (((x) >> 22) & 0x3ff)
+#define GET_PTE_INDEX(x)  (((x) >> 12) & 0x3ff)
+#define GET_OFFSET_INDEX(x)  ((x) & 0xfff)
 
 #define KERNEL_OFFSET 0xc0000000
 
 #define STACK_SIZE 8192
 
+// total memory size is placed at 0x90000
 #define TOTAL_MEM_SIZE_ADDR 0x90000
+
+// virtual address to physic address
+#define V2P(x) ((x) - KERNEL_OFFSET)
+// physic address to virtual address
+#define P2V(x) ((x) + KERNEL_OFFSET)
 
 #endif
