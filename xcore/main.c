@@ -56,7 +56,11 @@ void kmain(struct multiboot *mboot_ptr) {
 	put_hex(*((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)));
 	put_str("MB\n");
 	
+	put_hex(*((uint8_t*) 0xc03fffff));
+	
 	//__asm__ __volatile__("int $10");
+	
+	while(1); // 使CPU悬停在此
 	
 }
 

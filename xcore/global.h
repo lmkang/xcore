@@ -15,6 +15,7 @@
 #define PAGE_US_U 100
 #define PAGE_PGD_SIZE 1024 // 页目录项数目
 #define PAGE_PTE_SIZE 1024 // 页表项数目
+#define PAGE_PTE_COUNT 8
 
 // PDE,PTE,OFFSET
 #define GET_PGD_INDEX(x) (((x) >> 22) & 0x3ff)
