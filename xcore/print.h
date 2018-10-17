@@ -13,4 +13,8 @@ void put_str(char *str);
 
 void put_hex(uint32_t i);
 
+uint32_t sprintf(char *buf, const char *format, ...);
+
+uint32_t printk(const char *format, ...);
+
 #endif

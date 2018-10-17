@@ -9,21 +9,23 @@
 #define SELECTOR_USER_DATA (0x5 << 3 + 3)
 
 // page
-#define PAGE_SIZE 4096
-#define PAGE_P_1 1
-#define PAGE_RW_W 10
-#define PAGE_US_U 100
-#define PAGE_PGD_SIZE 1024 // 页目录项数目
-#define PAGE_PTE_SIZE 1024 // 页表项数目
-#define PAGE_PTE_COUNT 8
+#define PAGE_SIZE 4096 // 页大小(4KB)
+#define PAGE_P_1 1 // present
+#define PAGE_RW_W 10 // read/write
+#define PAGE_US_U 100 // user
+#define PAGE_PGD_SIZE 1024 // 页目录大小(单位:4B)
+#define PAGE_PTE_SIZE 1024 // 页表大小(单位:4B)
+#define PAGE_PTE_COUNT 128 // 内核页表数目
 
 // PDE,PTE,OFFSET
 #define GET_PGD_INDEX(x) (((x) >> 22) & 0x3ff)
 #define GET_PTE_INDEX(x)  (((x) >> 12) & 0x3ff)
 #define GET_OFFSET_INDEX(x)  ((x) & 0xfff)
 
+// kernel offset
 #define KERNEL_OFFSET 0xc0000000
 
+// stack size
 #define STACK_SIZE 8192
 
 // total memory size is placed at 0x90000

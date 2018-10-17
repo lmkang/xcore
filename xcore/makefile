@@ -9,48 +9,15 @@ INCLUDES =
 OBJS = $(BUILD_DIR)/boot.o $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o \
 	$(BUILD_DIR)/gdt.o $(BUILD_DIR)/gdtasm.o $(BUILD_DIR)/print.o \
 	$(BUILD_DIR)/putchar.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/idtasm.o \
-	$(BUILD_DIR)/page.o $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o \
-	$(BUILD_DIR)/memory.o
+	$(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/memory.o \
+	$(BUILD_DIR)/bitmap.o
 TARGET_NAME = kernel
 
-$(BUILD_DIR)/main.o : main.c
+$(BUILD_DIR)/%.o : %.c
 	$(CC) $(C_FLAGS) -c -o $@ $<
 
-$(BUILD_DIR)/boot.o : boot.S
+$(BUILD_DIR)/%.o : %.S
 	$(AS) $(AS_FLAGS) -o $@ $<
-
-$(BUILD_DIR)/init.o : init.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/gdt.o : gdt.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/gdtasm.o : gdtasm.S
-	$(AS) $(AS_FLAGS) -o $@ $<
-
-$(BUILD_DIR)/print.o : print.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/putchar.o : putchar.S
-	$(AS) $(AS_FLAGS) -o $@ $<
-
-$(BUILD_DIR)/interrupt.o : interrupt.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/idtasm.o : idtasm.S
-	$(AS) $(AS_FLAGS) -o $@ $<
-
-$(BUILD_DIR)/page.o : page.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/debug.o : debug.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/string.o : string.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
-
-$(BUILD_DIR)/memory.o : memory.c
-	$(CC) $(C_FLAGS) -c -o $@ $<
 
 $(BUILD_DIR)/$(TARGET_NAME) : $(OBJS)
 	$(LD) $(LD_FLAGS) -o $@ $^

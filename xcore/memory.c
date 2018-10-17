@@ -1,5 +1,6 @@
 #include "types.h"
 #include "global.h"
+#include "print.h"
 
 // 内核页目录数组
 pgd_t pgd_kern[PAGE_PGD_SIZE] __attribute__((aligned(PAGE_SIZE)));
@@ -19,11 +20,12 @@ void init_kernel_vmm() {
 		pgd_kern[i] = V2P((uint32_t) pte_kern[j]) | PAGE_P_1 | PAGE_RW_W;
 	}
 	uint32_t *pte = (uint32_t*) pte_kern;
-	// 不映射第0页,便于跟踪NULL指针
-	for(uint32_t i = 1; i < PAGE_PTE_COUNT * PAGE_PTE_SIZE; i++) {
+	for(uint32_t i = 0; i < PAGE_PTE_COUNT * PAGE_PTE_SIZE; i++) {
 		pte[i] = (i << 12) | PAGE_P_1 | PAGE_RW_W;
 	}
 	switch_pgd(V2P((uint32_t) pgd_kern));
+	
+	printk("init_kernel_vmm done\n");
 }
 
 

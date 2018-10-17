@@ -15,22 +15,31 @@ void get_total_mem(struct multiboot *mboot_ptr);
 uint8_t kern_stack[STACK_SIZE];
 
 // 建立临时页目录项,页表项,用来指向两个页
-__attribute__((section(".init.data"))) uint32_t *pde_tmp = (uint32_t*) 0x1000;
-__attribute__((section(".init.data"))) uint32_t *pte_low = (uint32_t*) 0x2000;
-__attribute__((section(".init.data"))) uint32_t *pte_high = (uint32_t*) 0x3000;
+__attribute__((section(".init.data"))) uint32_t *pgd_tmp = (uint32_t*) 0x1000;
+__attribute__((section(".init.data"))) uint32_t *pte_low1 = (uint32_t*) 0x2000;
+__attribute__((section(".init.data"))) uint32_t *pte_low2 = (uint32_t*) 0x3000;
+__attribute__((section(".init.data"))) uint32_t *pte_high1 = (uint32_t*) 0x4000;
+__attribute__((section(".init.data"))) uint32_t *pte_high2 = (uint32_t*) 0x5000;
 
 __attribute__((section(".init.text"))) void entry() {
-	pde_tmp[0] = (uint32_t) pte_low | PAGE_RW_W | PAGE_P_1;
-	pde_tmp[GET_PGD_INDEX(KERNEL_OFFSET)] = (uint32_t) pte_high | PAGE_RW_W | PAGE_P_1;
-	// 4KB / 4B = 1024
+	pgd_tmp[0] = (uint32_t) pte_low1 | PAGE_RW_W | PAGE_P_1;
+	pgd_tmp[GET_PGD_INDEX(KERNEL_OFFSET)] = (uint32_t) pte_high1 | PAGE_RW_W | PAGE_P_1;
+	pgd_tmp[1] = (uint32_t) pte_low2 | PAGE_RW_W | PAGE_P_1;
+	pgd_tmp[GET_PGD_INDEX(KERNEL_OFFSET) + 1] = (uint32_t) pte_high2 | PAGE_RW_W | PAGE_P_1;
 	// 映射虚拟地址0xc0000000-0xc0400000到0x00000000-0x00400000的物理地址
 	// 映射0x00000000-0x00400000的物理地址到虚拟地址0xc0000000-0xc0400000
-	for(int i = 0; i < 1024; i++) {
-		pte_low[i] = (i << 12) | PAGE_RW_W | PAGE_P_1;
-		pte_high[i] = (i << 12) | PAGE_RW_W | PAGE_P_1;
+	for(uint32_t i = 0; i < PAGE_PTE_SIZE; i++) {
+		pte_low1[i] = (i << 12) | PAGE_RW_W | PAGE_P_1;
+		pte_high1[i] = (i << 12) | PAGE_RW_W | PAGE_P_1;
+	}
+	// 映射虚拟地址0xc0400000-0xc0800000到0x00400000-0x00800000的物理地址
+	// 映射0x00400000-0x00800000的物理地址到虚拟地址0xc0400000-0xc0800000
+	for(uint32_t i = 1024; i < PAGE_PTE_SIZE + 1024; i++) {
+		pte_low2[i - 1024] = (i << 12) | PAGE_RW_W | PAGE_P_1;
+		pte_high2[i - 1024] = (i << 12) | PAGE_RW_W | PAGE_P_1;
 	}
 	// 开启分页
-	__asm__ __volatile__("mov %0, %%cr3" : : "r"(pde_tmp));
+	__asm__ __volatile__("mov %0, %%cr3" : : "r"(pgd_tmp));
 	uint32_t cr0 = 0;
 	__asm__ __volatile__("mov %%cr0, %0" : "=r"(cr0));
 	cr0 |= 0x80000000;
@@ -49,14 +58,10 @@ void kmain(struct multiboot *mboot_ptr) {
 	// 初始化所有模块
 	init_all();
 	
-	put_str("hello,kernel!\n");
-	
 	// 打印总物理内存容量
-	put_str("Total Memory : ");
-	put_hex(*((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)));
-	put_str("MB\n");
+	printk("Total Memory : %xMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)));
 	
-	put_hex(*((uint8_t*) 0xc03fffff));
+	printk("test : %x\n", *((uint32_t*) 0xd00fffff));
 	
 	//__asm__ __volatile__("int $10");
 	
