@@ -1,12 +1,24 @@
 #include "types.h"
 #include "global.h"
 #include "print.h"
+#include "bitmap.h"
 
 // 内核页目录数组
 pgd_t pgd_kern[PAGE_PGD_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
 // 内核页表数组
 pte_t pte_kern[PAGE_PTE_COUNT][PAGE_PTE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+
+// 内存池
+struct memory_pool {
+	struct bitmap *btmp;
+	uint32_t start_addr;
+};
+
+// 内核物理内存池
+struct memory_pool kernel_pool;
+// 用户物理内存池
+struct memory_pool user_pool;
 
 // 切换页目录
 void switch_pgd(uint32_t pgd) {
@@ -27,7 +39,6 @@ void init_kernel_vmm() {
 	
 	printk("init_kernel_vmm done\n");
 }
-
 
 
 

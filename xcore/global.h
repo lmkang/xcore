@@ -15,7 +15,7 @@
 #define PAGE_US_U 100 // user
 #define PAGE_PGD_SIZE 1024 // 页目录大小(单位:4B)
 #define PAGE_PTE_SIZE 1024 // 页表大小(单位:4B)
-#define PAGE_PTE_COUNT 128 // 内核页表数目
+#define PAGE_PTE_COUNT 1024 // 内核页表数目(最大是1024,支持4GB物理内存)
 
 // PDE,PTE,OFFSET
 #define GET_PGD_INDEX(x) (((x) >> 22) & 0x3ff)
@@ -35,5 +35,10 @@
 #define V2P(x) ((x) - KERNEL_OFFSET)
 // physic address to virtual address
 #define P2V(x) ((x) + KERNEL_OFFSET)
+
+#define OFFSET(struct_type, member_name) \
+	((int) ((&(struct_type*) 0)->member_name))
+#define ELE2ENTRY(struct_type, member_name, ele_ptr) \
+	((struct_type*) ((int) ele_ptr - OFFSET(struct_type, member_name)))
 
 #endif
