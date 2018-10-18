@@ -37,8 +37,8 @@ int alloc_bitmap(struct bitmap *btmp, uint32_t count) {
 	// 3 寻找空闲位数目
 	uint32_t index = byte_idx * 8 + bit_idx; // 位图的索引
 	uint32_t avail_count = btmp->byte_len * 8 - index;
-	uint32_t find_count = 1;
-	uint32_t next_idx = index + 1;
+	uint32_t find_count = 0;
+	uint32_t next_idx = index;
 	while(avail_count) {
 		if(!test_bitmap(btmp, next_idx)) {
 			++find_count;
@@ -46,6 +46,9 @@ int alloc_bitmap(struct bitmap *btmp, uint32_t count) {
 			find_count = 0;
 		}
 		if(find_count == count) {
+			for(uint32_t i = 0; i < count; i++) {
+				set_bitmap(btmp, (next_idx - count + 1) + i, 1);
+			}
 			return next_idx - count + 1;
 		}
 		++next_idx;

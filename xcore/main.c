@@ -3,6 +3,7 @@
 #include "init.h"
 #include "print.h"
 #include "multiboot.h"
+#include "memory.h"
 
 #define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
 
@@ -58,12 +59,31 @@ void kmain(struct multiboot *mboot_ptr) {
 	// 初始化所有模块
 	init_all();
 	
-	// 打印总物理内存容量
-	printk("Total Memory : %xMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)));
+	// 初始化内存管理
+	init_mem_pool(*((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)));
 	
-	printk("test : %x\n", *((uint32_t*) 0xd00fffff));
+	// 打印总物理内存容量
+	printk("Total Memory : %xMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)) / (1024 * 1024));
 	
 	//__asm__ __volatile__("int $10");
+	
+	uint32_t *test1 = (uint32_t*) kmalloc(1);
+	if(test1 != NULL) {
+		*test1 = 23;
+		printk("test1 : %x\n", test1);
+		printk("*test1 : %d\n", *test1);
+	}
+	
+	uint32_t *test2 = (uint32_t*) kmalloc(7);
+	if(test2 != NULL) {
+		*test2 = 50;
+		printk("test2 : %x\n", test2);
+		printk("*test2 : %d\n", *test2);
+	}
+	
+	uint32_t *test3 = (uint32_t*) kmalloc(4);
+	
+	//printk("user prog : %x\n", *((uint32_t*) 0x08048000));
 	
 	while(1); // 使CPU悬停在此
 	
@@ -73,7 +93,7 @@ void kmain(struct multiboot *mboot_ptr) {
 void get_total_mem(struct multiboot *mboot_ptr) {
 	uint32_t *mem_size_addr = (uint32_t *) P2V(TOTAL_MEM_SIZE_ADDR);
 	if (CHECK_FLAG(mboot_ptr->flags, 0)) {
-        *mem_size_addr = ((mboot_ptr->mem_lower * 1024) + (mboot_ptr->mem_upper * 1024)) / (1024 * 1024) + 1;
+        *mem_size_addr = mboot_ptr->mem_lower * 1024 + mboot_ptr->mem_upper * 1024 + 1024 * 1024;
     }
 }
 

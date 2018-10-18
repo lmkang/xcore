@@ -113,6 +113,9 @@ uint32_t vsprintf(char *str, const char *format, va_list ap) {
 				break;
 			case 'x':
 				arg_int = va_arg(ap, int);
+				// 16进制加上前缀0x
+				*buf++ = '0';
+				*buf++ = 'x';
 				itoa(arg_int, &buf, 16);
 				idx_ch = *(++idx_ptr);
 				// 跳过格式字符并更新idx_ch

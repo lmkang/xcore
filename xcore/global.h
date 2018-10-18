@@ -31,6 +31,15 @@
 // total memory size is placed at 0x90000
 #define TOTAL_MEM_SIZE_ADDR 0x90000
 
+// kernel end physic address(8MB)
+#define KERNEL_END_PADDR 0x800000
+
+// memory management bitmap physic address 
+#define MM_BITMAP_PADDR 0x7c0000
+
+// kernel virtual address start
+#define KERNEL_VADDR_START 0xc0800000
+
 // virtual address to physic address
 #define V2P(x) ((x) - KERNEL_OFFSET)
 // physic address to virtual address
