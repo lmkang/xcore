@@ -111,7 +111,7 @@ static void vp_map(void *vaddr, void *paddr) {
 	uint32_t _vaddr = (uint32_t) vaddr;
 	uint32_t _paddr = (uint32_t) paddr;
 	uint32_t pgd_index = GET_PGD_INDEX(_vaddr);
-	uint32_t *pte = (uint32_t*) (P2V(pgd_kern[pgd_index]) & 0xfffffff0);
+	uint32_t *pte = (uint32_t*) (P2V(pgd_kern[pgd_index]) & ~(PAGE_P_1 | PAGE_RW_W));
 	uint32_t pte_index = GET_PTE_INDEX(_vaddr);
 	for(int i = 0; i < 1024; i++) {
 		pte[i] = _paddr | PAGE_P_1 | PAGE_RW_W;
