@@ -10,9 +10,9 @@
 
 // page
 #define PAGE_SIZE 4096 // 页大小(4KB)
-#define PAGE_P_1 1 // present
-#define PAGE_RW_W 10 // read/write
-#define PAGE_US_U 100 // user
+#define PAGE_P_1 0x1 // present
+#define PAGE_RW_W 0x2 // read/write
+#define PAGE_US_U 0x4 // user
 #define PAGE_PGD_SIZE 1024 // 页目录大小(单位:4B)
 #define PAGE_PTE_SIZE 1024 // 页表大小(单位:4B)
 #define PAGE_PTE_COUNT 1024 // 内核页表数目(最大是1024,支持4GB物理内存)

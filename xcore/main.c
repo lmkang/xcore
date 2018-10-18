@@ -74,14 +74,21 @@ void kmain(struct multiboot *mboot_ptr) {
 		printk("*test1 : %d\n", *test1);
 	}
 	
-	uint32_t *test2 = (uint32_t*) kmalloc(7);
+	uint32_t *test2 = (uint32_t*) kmalloc(3);
 	if(test2 != NULL) {
 		*test2 = 50;
 		printk("test2 : %x\n", test2);
 		printk("*test2 : %d\n", *test2);
 	}
 	
-	uint32_t *test3 = (uint32_t*) kmalloc(4);
+	kfree(test2, 3);
+	
+	uint32_t *test3 = (uint32_t*) kmalloc(16);
+	if(test3 != NULL) {
+		*test3 = 66;
+		printk("test3 : %x\n", test3);
+		printk("*test3 : %d\n", *test3);
+	}
 	
 	//printk("user prog : %x\n", *((uint32_t*) 0x08048000));
 	

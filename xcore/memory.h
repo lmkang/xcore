@@ -7,4 +7,6 @@ void init_mem_pool(uint32_t mem_size);
 
 void *kmalloc(uint32_t size);
 
+void kfree(void *vaddr, uint32_t size);
+
 #endif
