@@ -2,9 +2,29 @@
 #include "global.h"
 #include "string.h"
 #include "memory.h"
+#include "debug.h"
+#include "interrupt.h"
+#include "print.h"
+
+struct task_struct *main_thread; // 主线程PCB
+struct list thread_ready_list; // 就绪队列
+struct list thread_all_list; // 所有任务队列
+static struct list_ele *thread_tag; // 用于保存队列中的线程节点
+
+extern void switch_to(struct task_struct *cur_task, struct task_struct *next_task);
+
+
+struct task_struct *current_thread(void) {
+	uint32_t esp;
+	__asm__ __volatile__("mov %%esp, %0" : "=g"(esp));
+	// 取esp整数部分,即PCB起始地址
+	return (struct task_struct*) (esp & 0xfffff000);
+}
 
 // 由kernel_thread去执行func(func_arg)
 static void kernel_thread(thread_func *func, void *func_arg) {
+	// 执行func前要开中断,避免时钟中断被屏蔽而无法调度其他进程
+	enable_intr();
 	func(func_arg);
 }
 
@@ -28,10 +48,18 @@ void thread_create(struct task_struct *pthread, thread_func func, void *func_arg
 void init_thread(struct task_struct *pthread, char *name, uint8_t priority) {
 	memset(pthread, 0, sizeof(*pthread));
 	strcpy(pthread->name, name);
-	pthread->status = TASK_RUNNING;
-	pthread->priority = priority;
+	// main方法被封装为主线程
+	if(pthread == main_thread) {
+		pthread->status = TASK_RUNNING;
+	} else {
+		pthread->status = TASK_READY;
+	}
 	// self_kstack是线程在内核态下使用的栈顶地址
 	pthread->self_kstack = (uint32_t*) ((uint32_t) pthread + PAGE_SIZE);
+	pthread->priority = priority;
+	pthread->ticks = priority;
+	pthread->elapsed_ticks = 0;
+	pthread->pgdir = NULL;
 	pthread->stack_magic = 0x19940625; // 自定义的魔数
 }
 
@@ -42,88 +70,55 @@ struct task_struct *thread_start(char *name, uint8_t priority, \
 	struct task_struct *thread = kmalloc(1);
 	init_thread(thread, name, priority);
 	thread_create(thread, func, func_arg);
-	__asm__ __volatile__(" \
-		movl %0, %%esp; \
-		pop %%ebp; \
-		pop %%ebx; \
-		pop %%edi; \
-		pop %%esi; \
-		ret" \
-		: : "g"(thread->self_kstack) : "memory" \
-	);
+	
+	// 确保之前不在就绪队列中
+	ASSERT(!list_find(&thread_ready_list, &thread->general_tag));
+	// 加入就绪队列
+	list_append(&thread_ready_list, &thread->general_tag);
+	// 确保之前不在所有线程队列中
+	ASSERT(!list_find(&thread_all_list, &thread->all_list_tag));
+	// 加入所有线程的队列
+	list_append(&thread_all_list, &thread->all_list_tag);
+	
 	return thread;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 将kernel中的kmain函数封装为主线程
+static void create_main_thread(void) {
+	main_thread = current_thread();
+	init_thread(main_thread, "main", 31);
+	// kmain函数是当前线程,不需要加入就绪队列
+	ASSERT(!list_find(&thread_all_list, &main_thread->all_list_tag));
+	list_append(&thread_all_list, &main_thread->all_list_tag);
+}
+
+// 实现任务调度
+void schedule(void) {
+	ASSERT(get_intr_status() == INTR_OFF);
+	struct task_struct *cur_thread = current_thread();
+	if(cur_thread->status == TASK_RUNNING) {
+		// 若此线程只是CPU时间片到了,将其加入就绪队列队尾
+		ASSERT(!list_find(&thread_ready_list, &cur_thread->general_tag));
+		list_append(&thread_ready_list, &cur_thread->general_tag);
+		cur_thread->ticks = cur_thread->priority;
+		cur_thread->status = TASK_READY;
+	} else {
+		// 若此线程需要某事件发生后才能继续上CPU运行,
+		// 不需要将其加入队列,因为当前线程不在就绪队列中
+	}
+	ASSERT(!list_empty(&thread_ready_list));
+	thread_tag = NULL;
+	// 将thread_ready_list队列中的第一个就绪线程弹出,准备调度上CPU
+	thread_tag = list_pop(&thread_ready_list);
+	struct task_struct *next_task = ELE2ENTRY(struct task_struct, general_tag, thread_tag);
+	next_task->status = TASK_RUNNING;
+	switch_to(cur_thread, next_task);
+}
+
+// 初始化线程环境
+void thread_init(void) {
+	list_init(&thread_ready_list);
+	list_init(&thread_all_list);
+	create_main_thread();
+	printk("thread_init done\n");
+}

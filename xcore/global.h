@@ -46,7 +46,7 @@
 #define P2V(x) ((x) + KERNEL_OFFSET)
 
 #define OFFSET(struct_type, member_name) \
-	((int) ((&(struct_type*) 0)->member_name))
+	((int) (&((struct_type*) 0)->member_name))
 	
 #define ELE2ENTRY(struct_type, member_name, ele_ptr) \
 	((struct_type*) ((int) ele_ptr - OFFSET(struct_type, member_name)))

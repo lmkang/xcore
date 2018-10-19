@@ -2,6 +2,7 @@
 #define __THREAD_H
 
 #include "types.h"
+#include "list.h"
 
 // 线程函数类型
 typedef void thread_func(void *);
@@ -63,12 +64,23 @@ struct thread_stack {
 struct task_struct {
 	uint32_t *self_kstack; // 各内核线程都用自己的内核栈
 	enum task_status status;
-	uint8_t priority; // 线程优先级
 	char name[16];
+	uint8_t priority; // 线程优先级
+	uint8_t ticks; // 时钟嘀嗒数
+	uint32_t elapsed_ticks; // 任务已执行的时钟嘀嗒数
+	struct list_ele general_tag; // 线程在一般队列中的节点
+	struct list_ele all_list_tag; // 线程在thread_all_list中的节点
+	uint32_t *pgdir; // 进程的页目录虚拟地址,如果是线程则为NULL
 	uint32_t stack_magic; // 魔数,用于检测栈的溢出
 };
 
+struct task_struct *current_thread(void);
+
 struct task_struct *thread_start(char *name, uint8_t priority, \
 	thread_func func, void *func_arg);
+
+void schedule(void);
+
+void thread_init(void);
 
 #endif

@@ -67,7 +67,7 @@ bool list_empty(struct list *list) {
 // 遍历链表,调用回调函数func(ele, arg),找到符合条件的元素
 // func(ele, arg)返回true表示找到元素,停止遍历
 // func(ele, arg)返回false表示未找到元素,继续遍历
-struct list_ele *list_traversal(struct list *list, void *func, int arg) {
+struct list_ele *list_traversal(struct list *list, list_func func, int arg) {
 	if(list_empty(list)) {
 		return NULL;
 	}

@@ -190,14 +190,11 @@ static void general_intr_handler(uint8_t vec_no) {
 	set_cursor(0);
 	put_str("!!! exception message begin !!!\n");
 	set_cursor(88); // 从第2行第8个字符开始打印
-	put_str(intr_names[vec_no]);
-	put_str("\n");
-	if(vec_no == 0xe) { // 如果是pagefault,将缺失的地址打印
+	printk("interrupt name : %s, vector number : %d\n", intr_names[vec_no], vec_no);
+	if(vec_no == 14) { // 如果是pagefault,将缺失的地址打印
 		int page_fault_vaddr = 0;
 		__asm__ __volatile__("movl %%cr2, %0" : "=r"(page_fault_vaddr)); // cr2存放page_fault的地址
-		put_str("page fault addr is ");
-		put_hex(page_fault_vaddr);
-		put_str("\n");
+		printk("page fault addr is %x\n", page_fault_vaddr);
 	}
 	put_str("!!! exception message end !!!\n");
 	while(1); // 使CPU悬停于此
@@ -246,8 +243,8 @@ void init_idt(void) {
 }
 
 // 在中断处理程序数组第vec_no个元素中注册中断处理程序func
-void register_intr_handler(uint8_t vec_no, void *func) {
-	intr_offsets[vec_no] = func;
+void register_intr_handler(uint8_t vec_no, void *intr_func) {
+	intr_handlers[vec_no] = intr_func;
 }
 
 // 获取当前中断状态

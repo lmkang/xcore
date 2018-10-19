@@ -13,7 +13,7 @@ enum intr_status {
 
 void init_idt(void);
 
-void register_intr_handler(uint8_t vec_no, void *func);
+void register_intr_handler(uint8_t vec_no, void *intr_func);
 
 enum intr_status get_intr_status(void);
 

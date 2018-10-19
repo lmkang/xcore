@@ -5,6 +5,7 @@
 #include "multiboot.h"
 #include "memory.h"
 #include "thread.h"
+#include "interrupt.h"
 
 #define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
 
@@ -54,6 +55,7 @@ __attribute__((section(".init.text"))) void entry() {
 }
 
 void k_thread_a(void *);
+void k_thread_b(void *);
 
 void kmain(struct multiboot *mboot_ptr) {
 	// 获取总物理内存容量
@@ -66,6 +68,13 @@ void kmain(struct multiboot *mboot_ptr) {
 	printk("Total Memory : %xMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)) / (1024 * 1024));
 	
 	thread_start("k_thread_a", 31, k_thread_a, "argA ");
+	thread_start("k_thread_b", 8, k_thread_b, "argB ");
+	
+	enable_intr();
+	
+	while(1) {
+		printk("Main ");
+	}
 	
 	while(1); // 使CPU悬停在此
 	
@@ -86,7 +95,12 @@ void k_thread_a(void *arg) {
 	}
 }
 
-
+void k_thread_b(void *arg) {
+	char *param = (char*) arg;
+	while(1) {
+		printk(param);
+	}
+}
 
 
 

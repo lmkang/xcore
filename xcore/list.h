@@ -15,6 +15,9 @@ struct list {
 	struct list_ele tail; // 链表尾
 };
 
+// 自定义函数类型,用于在list_traversal中做回调函数
+typedef bool (list_func)(struct list_ele *ele, int arg);
+
 void list_init(struct list *list);
 
 void list_insert_before(struct list_ele *before, struct list_ele *ele);
@@ -31,7 +34,7 @@ bool list_find(struct list *list, struct list_ele *ele);
 
 bool list_empty(struct list *list);
 
-struct list_ele *list_traversal(struct list *list, void *func, int arg);
+struct list_ele *list_traversal(struct list *list, list_func func, int arg);
 
 uint32_t list_len(struct list *list);
 
