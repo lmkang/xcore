@@ -17,8 +17,8 @@ struct memory_pool {
 	uint32_t pool_size; // 字节大小
 };
 
-// 虚拟地址管理
-struct virtual_addr {
+// 虚拟地址池
+struct vaddr_pool {
 	struct bitmap vaddr_btmp; // 虚拟地址用到的位图结构
 	uint32_t vaddr_start; // 虚拟地址起始地址
 };
@@ -28,7 +28,7 @@ struct memory_pool kernel_pool;
 // 用户物理内存池
 struct memory_pool user_pool;
 
-struct virtual_addr kernel_vaddr;
+struct vaddr_pool kernel_vaddr;
 
 // 切换页目录
 void switch_pgd(uint32_t pgd) {
@@ -96,19 +96,50 @@ static void *get_paddr(uint32_t page_count) {
 	return (void*) (kernel_pool.paddr_start + p_index * PAGE_SIZE);
 }
 
-// 将虚拟地址映射到物理地址
+// 将虚拟地址vaddr映射到物理地址paddr,共size个页
 static void vp_map(void *vaddr, void *paddr, uint32_t size) {
 	ASSERT(vaddr != NULL && paddr != NULL);
 	uint32_t _vaddr = (uint32_t) vaddr;
 	uint32_t _paddr = (uint32_t) paddr;
 	_paddr |= (PAGE_P_1 | PAGE_RW_W);
+	uint32_t pgd_index;
+	uint32_t *pte;
+	uint32_t pte_index;
 	while(size-- > 0) {
-		uint32_t pgd_index = GET_PGD_INDEX(_vaddr) - GET_PGD_INDEX(KERNEL_OFFSET);
-		uint32_t *pte = pte_kern[pgd_index];
-		uint32_t pte_index = GET_PTE_INDEX(_vaddr);
+		printk("vaddr : %x, paddr : %x\n", _vaddr, _paddr);
+		pgd_index = GET_PGD_INDEX(_vaddr) - GET_PGD_INDEX(KERNEL_OFFSET);
+		pte = pte_kern[pgd_index];
+		pte_index = GET_PTE_INDEX(_vaddr);
 		pte[pte_index] = _paddr;
 		_vaddr += PAGE_SIZE;
 		_paddr += PAGE_SIZE;
+	}
+}
+
+// 解除虚拟地址vaddr和物理地址paddr的映射,共size个页
+static void vp_unmap(void *vaddr, uint32_t size) {
+	uint32_t _vaddr = (uint32_t) vaddr;
+	uint32_t v_index = (_vaddr - kernel_vaddr.vaddr_start) / PAGE_SIZE;
+	for(uint32_t i = v_index; i < v_index + size; i++) {
+		set_bitmap(&kernel_vaddr.vaddr_btmp, i, 0);
+	}
+	uint32_t pgd_index = GET_PGD_INDEX(_vaddr) - GET_PGD_INDEX(KERNEL_OFFSET);
+	uint32_t *pte = pte_kern[pgd_index];
+	uint32_t pte_index = GET_PTE_INDEX(_vaddr);
+	uint32_t p_index = (pte[pte_index] - kernel_pool.paddr_start) / PAGE_SIZE;
+	for(uint32_t i = p_index; i < p_index + size; i++) {
+		set_bitmap(&kernel_pool.pool_btmp, i, 0);
+	}
+	while(size-- > 0) {
+		pgd_index = GET_PGD_INDEX(_vaddr) - GET_PGD_INDEX(KERNEL_OFFSET);
+		pte = pte_kern[pgd_index];
+		pte_index = GET_PTE_INDEX(_vaddr);
+		printk("pte[%d] : %x\n", pte_index, pte[pte_index]);
+		pte[pte_index] &= ~(PAGE_P_1);
+		printk("pte[%d] : %x\n", pte_index, pte[pte_index]);
+		// 清除TLB缓存
+		__asm__ __volatile__("invlpg (%0)" : : "r"(_vaddr) : "memory");
+		_vaddr += PAGE_SIZE;
 	}
 }
 
@@ -129,11 +160,7 @@ void *kmalloc(uint32_t size) {
 // 释放以虚拟地址vaddr为起始的size个页框
 void kfree(void *vaddr, uint32_t size) {
 	ASSERT(vaddr != NULL);
-	uint32_t _vaddr = (uint32_t) vaddr;
-	uint32_t index = (_vaddr - kernel_vaddr.vaddr_start) / PAGE_SIZE;
-	for(uint32_t i = index; i <= index + size; i++) {
-		set_bitmap(&kernel_vaddr.vaddr_btmp, i, 0);
-	}
+	vp_unmap(vaddr, size);
 }
 
 

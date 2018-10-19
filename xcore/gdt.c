@@ -25,9 +25,6 @@ struct gdt_entry gdt_entries[GDT_ENTRY_COUNT];
 // gdt指针
 struct gdt_ptr *gdt_ptr;
 
-// 刷新gdt
-extern void flush_gdt(uint32_t);
-
 // 设置段描述符
 static void set_gdt_entry(uint16_t index, uint32_t base, uint32_t limit, 
 	uint8_t attr_low, uint8_t attr_high) {
@@ -42,6 +39,23 @@ static void set_gdt_entry(uint16_t index, uint32_t base, uint32_t limit,
 	gdt_entries[index].attr_high |= (attr_high & 0xf0);
 	
 	gdt_entries[index].attr_low = attr_low;
+}
+
+void flush_gdt(uint32_t gdt_entry) {
+	__asm__ __volatile__(" \
+		mov %0, %%eax; \
+		lgdt (%%eax); \
+		mov $0x10, %%ax; \
+		mov %%ax, %%ds; \
+		mov %%ax, %%es; \
+		mov %%ax, %%fs; \
+		mov %%ax, %%ss; \
+		mov $0x18, %%ax; \
+		mov %%ax, %%gs; \
+		ljmp $0x08,$flush; \
+		flush: " \
+		: : "g"(gdt_entry) : "memory" \
+	);
 }
 
 // 初始化gdt

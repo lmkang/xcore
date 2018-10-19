@@ -167,10 +167,8 @@ static void init_pic(void) {
 	outb(PIC_SLAVE_DATA, 0x02); // ICW3:设置从片连接到主片的IR2引脚
 	outb(PIC_SLAVE_DATA, 0x01); // ICW4:8086模式,正常EOI
 	
-	// IRQ0,IRQ1,IRQ2,其他全部关闭
-	outb(PIC_MASTER_DATA, 0xf8);
-	// IRQ14(硬盘控制器)
-	outb(PIC_SLAVE_DATA, 0xbf);
+	outb(PIC_MASTER_DATA, 0xfe);
+	outb(PIC_SLAVE_DATA, 0xff);
 	
 	put_str("init_pic done\n");
 }
@@ -240,7 +238,8 @@ void init_idt(void) {
 	init_pic(); // 初始化8259A
 	
 	// 加载idt
-	uint64_t idt_operand = ((sizeof(idt_entries) - 1) | ((uint64_t) (uint32_t) idt_entries << 16));
+	uint64_t idt_operand = ((sizeof(idt_entries) - 1) | \
+		((uint64_t) (uint32_t) idt_entries << 16));
 	__asm__ __volatile__("lidt %0" : : "m"(idt_operand));
 	
 	put_str("init_idt done\n");
