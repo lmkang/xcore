@@ -73,7 +73,7 @@ void kmain(struct multiboot *mboot_ptr) {
 	enable_intr();
 	
 	while(1) {
-		printk("Main ");
+		console_printk("Main ");
 	}
 	
 	while(1); // 使CPU悬停在此
@@ -91,14 +91,14 @@ void get_total_mem(struct multiboot *mboot_ptr) {
 void k_thread_a(void *arg) {
 	char *param = (char*) arg;
 	while(1) {
-		printk(param);
+		console_printk(param);
 	}
 }
 
 void k_thread_b(void *arg) {
 	char *param = (char*) arg;
 	while(1) {
-		printk(param);
+		console_printk(param);
 	}
 }
 

@@ -1,7 +1,6 @@
 #ifndef __THREAD_H
 #define __THREAD_H
 
-#include "types.h"
 #include "list.h"
 
 // 线程函数类型
@@ -82,5 +81,9 @@ struct task_struct *thread_start(char *name, uint8_t priority, \
 void schedule(void);
 
 void thread_init(void);
+
+void thread_block(enum task_status status);
+
+void thread_unblock(struct task_struct *pthread);
 
 #endif

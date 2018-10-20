@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "thread.h"
 #include "timer.h"
+#include "print.h"
 
 void init_all(uint32_t mem_size) {
 	init_gdt(); // 初始化GDT
@@ -11,4 +12,5 @@ void init_all(uint32_t mem_size) {
 	init_kernel_vmm(); // 初始化内核页目录和页表
 	init_mem_pool(mem_size); // 初始化内存管理
 	thread_init(); // 初始化线程
+	console_init(); //初始化终端
 }

@@ -1,5 +1,6 @@
 #include "x86.h"
 #include "string.h"
+#include "sync.h"
 
 typedef char* va_list;
 
@@ -8,6 +9,8 @@ typedef char* va_list;
 #define va_end(ap) ap = NULL
 
 void put_char(uint8_t ch);
+
+static struct lock console_lock; // 终端锁
 
 // 设置光标位置
 void set_cursor(uint16_t cursor_pos) {
@@ -143,5 +146,23 @@ uint32_t printk(const char *format, ...) {
 	uint32_t ret_val = vsprintf(buf, format, args);
 	va_end(args);
 	put_str(buf);
+	return ret_val;
+}
+
+// 初始化终端
+void console_init() {
+	lock_init(&console_lock);
+}
+
+// 终端格式化输出
+uint32_t console_printk(const char *format, ...) {
+	lock_acquire(&console_lock);
+	va_list args;
+	va_start(args, format); // 将args指向format
+	char buf[1024] = {0}; // 用于存储拼接后的字符串
+	uint32_t ret_val = vsprintf(buf, format, args);
+	va_end(args);
+	put_str(buf);
+	lock_release(&console_lock);
 	return ret_val;
 }

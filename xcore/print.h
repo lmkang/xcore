@@ -17,4 +17,8 @@ uint32_t sprintf(char *buf, const char *format, ...);
 
 uint32_t printk(const char *format, ...);
 
+void console_init();
+
+uint32_t console_printk(const char *format, ...);
+
 #endif

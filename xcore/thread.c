@@ -115,6 +115,37 @@ void schedule(void) {
 	switch_to(cur_thread, next_task);
 }
 
+// 当前线程将自己阻塞,设置其状态为status
+void thread_block(enum task_status status) {
+	enum intr_status old_status = get_intr_status();
+	disable_intr();
+	// status取值为TASK_BLOCKED,TASK_WAITING,TASK_HANGING
+	ASSERT((status == TASK_BLOCKED) \
+		|| (status == TASK_WAITING) || (status == TASK_HANGING));
+	struct task_struct *cur_thread = current_thread();
+	cur_thread->status = status;
+	schedule();
+	set_intr_status(old_status);
+}
+
+// 将线程pthread解除阻塞
+void thread_unblock(struct task_struct *pthread) {
+	enum intr_status old_status = get_intr_status();
+	disable_intr();
+	ASSERT((pthread->status == TASK_BLOCKED) \
+		|| (pthread->status == TASK_WAITING) || (pthread->status == TASK_HANGING));
+	if(pthread->status != TASK_READY) {
+		ASSERT(!list_find(&thread_ready_list, &pthread->general_tag));
+		if(list_find(&thread_ready_list, &pthread->general_tag)) {
+			PANIC("thread_unblock : blocked thread in thread_ready_list!\n");
+		}
+		// 放到队列最前面,使其尽快得到调度
+		pthread->status = TASK_READY;
+		list_push(&thread_ready_list, &pthread->general_tag);
+	}
+	set_intr_status(old_status);
+}
+
 // 初始化线程环境
 void thread_init(void) {
 	list_init(&thread_ready_list);
@@ -122,3 +153,54 @@ void thread_init(void) {
 	create_main_thread();
 	printk("thread_init done\n");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
