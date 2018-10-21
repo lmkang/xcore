@@ -13,7 +13,6 @@ static struct list_ele *thread_tag; // 用于保存队列中的线程节点
 
 extern void switch_to(struct task_struct *cur_task, struct task_struct *next_task);
 
-
 struct task_struct *current_thread(void) {
 	uint32_t esp;
 	__asm__ __volatile__("mov %%esp, %0" : "=g"(esp));
@@ -67,7 +66,7 @@ void init_thread(struct task_struct *pthread, char *name, uint8_t priority) {
 struct task_struct *thread_start(char *name, uint8_t priority, \
 	thread_func func, void *func_arg) {
 	// PCB都位于内核空间,包括用户进程的PCB也是在内核空间
-	struct task_struct *thread = kmalloc(1);
+	struct task_struct *thread = get_kernel_pages(1);
 	init_thread(thread, name, priority);
 	thread_create(thread, func, func_arg);
 	

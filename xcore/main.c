@@ -6,6 +6,7 @@
 #include "memory.h"
 #include "thread.h"
 #include "interrupt.h"
+#include "keyboard.h"
 
 #define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
 
@@ -67,14 +68,14 @@ void kmain(struct multiboot *mboot_ptr) {
 	// 打印总物理内存容量
 	printk("Total Memory : %xMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)) / (1024 * 1024));
 	
-	thread_start("k_thread_a", 31, k_thread_a, "argA ");
-	thread_start("k_thread_b", 8, k_thread_b, "argB ");
+	thread_start("k_thread_a", 31, k_thread_a, "A_");
+	thread_start("k_thread_b", 8, k_thread_b, "B_");
 	
 	enable_intr();
 	
-	while(1) {
-		console_printk("Main ");
-	}
+	//while(1) {
+		//console_printk("Main ");
+	//}
 	
 	while(1); // 使CPU悬停在此
 	
@@ -91,14 +92,28 @@ void get_total_mem(struct multiboot *mboot_ptr) {
 void k_thread_a(void *arg) {
 	char *param = (char*) arg;
 	while(1) {
-		console_printk(param);
+		enum intr_status old_status = get_intr_status();
+		disable_intr();
+		if(!ioq_empty(&kbd_buf)) {
+			console_printk(param);
+			char ch = ioq_getchar(&kbd_buf);
+			console_printk("%c ", ch);
+		}
+		set_intr_status(old_status);
 	}
 }
 
 void k_thread_b(void *arg) {
 	char *param = (char*) arg;
 	while(1) {
-		console_printk(param);
+		enum intr_status old_status = get_intr_status();
+		disable_intr();
+		if(!ioq_empty(&kbd_buf)) {
+			console_printk(param);
+			char ch = ioq_getchar(&kbd_buf);
+			console_printk("%c ", ch);
+		}
+		set_intr_status(old_status);
 	}
 }
 
