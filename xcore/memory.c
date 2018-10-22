@@ -220,8 +220,6 @@ void *kmalloc(uint32_t size, enum pool_flag pf) {
 	if(paddr == NULL) {
 		return NULL;
 	}
-	printk("vaddr : %x\n", vaddr);
-	printk("paddr : %x\n", paddr);
 	vp_map(vaddr, paddr, size, pf);
 	return vaddr;
 }

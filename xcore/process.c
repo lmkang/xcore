@@ -73,10 +73,10 @@ uint32_t *create_pgdir(void) {
 	}
 	// 复制页表
 	uint32_t pgd_index = GET_PGD_INDEX(KERNEL_OFFSET);
-	memcpy((uint32_t*) ((uint32_t) pgdir_vaddr + pgd_index), \
+	memcpy((uint32_t*) &pgdir_vaddr[pgd_index], \
 		(uint32_t*) &pgd_kern[pgd_index], 1024);
 	// 返回页目录地址
-	return V2P(pgdir_vaddr);
+	return pgdir_vaddr;
 }
 
 // 创建用户进程虚拟地址位图
