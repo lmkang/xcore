@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "interrupt.h"
 #include "print.h"
+#include "process.h"
 
 struct task_struct *main_thread; // 主线程PCB
 struct list thread_ready_list; // 就绪队列
@@ -111,6 +112,7 @@ void schedule(void) {
 	thread_tag = list_pop(&thread_ready_list);
 	struct task_struct *next_task = ELE2ENTRY(struct task_struct, general_tag, thread_tag);
 	next_task->status = TASK_RUNNING;
+	process_activate(next_task);
 	switch_to(cur_thread, next_task);
 }
 

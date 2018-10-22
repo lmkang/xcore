@@ -2,6 +2,7 @@
 #define __MEMORY_H
 
 #include "bitmap.h"
+#include "global.h"
 
 // 内存池类型
 enum pool_flag {
@@ -15,7 +16,7 @@ struct vaddr_pool {
 	uint32_t vaddr_start; // 虚拟地址起始地址
 };
 
-void switch_pgd(uint32_t pgd);
+extern pgd_t pgd_kern[PAGE_PGD_SIZE];
 
 void init_kernel_vmm();
 
@@ -28,5 +29,7 @@ void kfree(void *vaddr, uint32_t size);
 void *get_user_pages(uint32_t size);
 
 void *get_kernel_pages(uint32_t size);
+
+void *get_pages(uint32_t vaddr, uint32_t size);
 
 #endif

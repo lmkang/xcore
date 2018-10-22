@@ -6,8 +6,8 @@
 #define SELECTOR_KERNEL_DATA (0x2 << 3)
 #define SELECTOR_VIDEO_DATA (0x3 << 3)
 #define SELECTOR_TSS (0x4 << 3)
-#define SELECTOR_USER_CODE (0x5 << 3 + 3)
-#define SELECTOR_USER_DATA (0x6 << 3 + 3)
+#define SELECTOR_USER_CODE ((0x5 << 3) + 3)
+#define SELECTOR_USER_DATA ((0x6 << 3) + 3)
 
 // page
 #define PAGE_SIZE 4096 // 页大小(4KB)
@@ -51,6 +51,11 @@
 // user virtual address start
 #define USER_VADDR_START 0x08048000
 
+// user stack3 virtual address
+#define USER_STACK3_VADDR (KERNEL_OFFSET - 0x1000)
+
+#define USER_DEFAULT_PRIORITY 31
+
 // virtual address to physic address
 #define V2P(x) ((x) - KERNEL_OFFSET)
 // physic address to virtual address
@@ -61,5 +66,7 @@
 	
 #define ELE2ENTRY(struct_type, member_name, ele_ptr) \
 	((struct_type*) ((int) ele_ptr - OFFSET(struct_type, member_name)))
+
+#define DIV_ROUND_UP(X, STEP) ((X + STEP - 1) / (STEP))
 
 #endif
