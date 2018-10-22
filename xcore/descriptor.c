@@ -117,7 +117,7 @@ void init_gdt() {
 	memset(&tss, 0, tss_size);
 	tss.ss0 = SELECTOR_KERNEL_DATA;
 	tss.io_base = tss_size;
-	set_gdt_entry(4, (uint32_t*) &tss, tss_size - 1, 0x89, 0x80);
+	set_gdt_entry(4, (uint32_t) &tss, tss_size - 1, 0x89, 0x80);
 	
 	gdt_ptr->limit = (sizeof(struct gdt_entry) * GDT_ENTRY_COUNT) - 1;
 	gdt_ptr->base = (uint32_t) gdt_entries;

@@ -174,10 +174,10 @@ static void vp_unmap(void *vaddr, uint32_t size) {
 	}
 	struct memory_pool mem_pool;
 	enum pool_flag pf;
-	if(vaddr >= KERNEL_VADDR_START) {
+	if(_vaddr >= KERNEL_VADDR_START) {
 		mem_pool = kernel_pool;
 		pf = PF_KERNEL;
-	} else if((vaddr >= USER_VADDR_START) || (vaddr < KERNEL_OFFSET)) {
+	} else if((_vaddr >= USER_VADDR_START) || (_vaddr < KERNEL_OFFSET)) {
 		mem_pool = user_pool;
 		pf = PF_USER;
 	}
@@ -265,9 +265,9 @@ void *get_pages(uint32_t vaddr, uint32_t size) {
 		lock_release(&mem_pool.lock);
 		return NULL;
 	}
-	vp_map(vaddr, paddr, size, pf);
+	vp_map((void*) vaddr, paddr, size, pf);
 	lock_release(&mem_pool.lock);
-	return vaddr;
+	return (void*) vaddr;
 }
 
 
