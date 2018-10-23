@@ -47,6 +47,7 @@ void init_kernel_vmm() {
 	for(uint32_t i = 0, j = kern_pte_count; i < other_pte_count; i++, j++) {
 		pgd_kern[i] = V2P((uint32_t) pte_kern[j]) | PAGE_P_1 | PAGE_RW_W;
 	}
+	// 映射0-8MB内存
 	uint32_t *pte = (uint32_t*) pte_kern;
 	for(uint32_t i = 0; i < 2 * PAGE_PTE_SIZE; i++) {
 		pte[i] = (i << 12) | PAGE_P_1 | PAGE_RW_W;

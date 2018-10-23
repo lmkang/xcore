@@ -7,6 +7,9 @@
 #include "descriptor.h"
 #include "interrupt.h"
 
+extern struct list thread_ready_list; // 就绪队列
+extern struct list thread_all_list; // 所有任务队列
+
 // 构建用户进程初始上下文信息
 void start_process(void *filename) {
 	ASSERT(filename != NULL);

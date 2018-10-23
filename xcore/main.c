@@ -8,6 +8,7 @@
 #include "interrupt.h"
 #include "keyboard.h"
 #include "process.h"
+#include "string.h"
 
 #define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
 
@@ -71,7 +72,7 @@ void kmain(struct multiboot *mboot_ptr) {
 	init_all(*((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)));
 	
 	// 打印总物理内存容量
-	printk("Total Memory : %xMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)) / (1024 * 1024));
+	printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)) / (1024 * 1024));
 	
 	//thread_start("k_thread_a", 31, k_thread_a, "A_");
 	//thread_start("k_thread_b", 8, k_thread_b, "B_");

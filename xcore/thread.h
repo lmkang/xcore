@@ -75,9 +75,6 @@ struct task_struct {
 	uint32_t stack_magic; // 魔数,用于检测栈的溢出
 };
 
-extern struct list thread_ready_list; // 就绪队列
-extern struct list thread_all_list; // 所有任务队列
-
 struct task_struct *current_thread(void);
 
 void thread_create(struct task_struct *pthread, thread_func func, void *func_arg);
