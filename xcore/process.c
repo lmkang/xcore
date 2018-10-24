@@ -78,6 +78,7 @@ uint32_t *create_pgdir(void) {
 	uint32_t pgd_index = GET_PGD_INDEX(KERNEL_OFFSET);
 	memcpy((uint32_t*) &pgdir_vaddr[pgd_index], \
 		(uint32_t*) &pgd_kern[pgd_index], 1024);
+	pgdir_vaddr[1023] = V2P((uint32_t) pgdir_vaddr);
 	// 返回页目录地址
 	return pgdir_vaddr;
 }

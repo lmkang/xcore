@@ -40,17 +40,17 @@ void init_kernel_vmm() {
 		kern_pte_count = 256;
 	}
 	for(uint32_t i = kern_pte_base, j = 0; i < kern_pte_count + kern_pte_base; i++, j++) {
-		pgd_kern[i] = V2P((uint32_t) pte_kern[j]) | PAGE_P_1 | PAGE_RW_W;
+		pgd_kern[i] = V2P((uint32_t) pte_kern[j]) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
 	}
 	// 其他页目录项最多 0-767
 	uint32_t other_pte_count = PAGE_PTE_COUNT - kern_pte_count;
 	for(uint32_t i = 0, j = kern_pte_count; i < other_pte_count; i++, j++) {
-		pgd_kern[i] = V2P((uint32_t) pte_kern[j]) | PAGE_P_1 | PAGE_RW_W;
+		pgd_kern[i] = V2P((uint32_t) pte_kern[j]) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
 	}
 	// 映射0-8MB内存
 	uint32_t *pte = (uint32_t*) pte_kern;
 	for(uint32_t i = 0; i < 2 * PAGE_PTE_SIZE; i++) {
-		pte[i] = (i << 12) | PAGE_P_1 | PAGE_RW_W;
+		pte[i] = (i << 12) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
 	}
 	__asm__ __volatile__("mov %0, %%cr3" : : "r"(V2P((uint32_t) pgd_kern)));
 	
@@ -147,7 +147,7 @@ static void vp_map(void *vaddr, void *paddr, uint32_t size, enum pool_flag pf) {
 	ASSERT((pf == PF_KERNEL) || (pf == PF_USER));
 	uint32_t _vaddr = (uint32_t) vaddr;
 	uint32_t _paddr = (uint32_t) paddr;
-	_paddr |= (PAGE_P_1 | PAGE_RW_W);
+	_paddr |= (PAGE_US_U | PAGE_P_1 | PAGE_RW_W);
 	uint32_t pgd_index;
 	pte_t *pte;
 	uint32_t pte_index;
@@ -260,15 +260,28 @@ void *get_pages(uint32_t vaddr, uint32_t size) {
 	} else {
 		return NULL;
 	}
-	lock_acquire(&mem_pool.lock);
+	uint32_t cr3;
+	__asm__ __volatile__("mov %%cr3, %0" : "=r"(cr3));
+	pgd_t *pgd = (pgd_t*) P2V(cr3);
+	pte_t *pte = pgd[1023];
+	uint32_t pte_index;
+	uint32_t _vaddr = vaddr;
+	while(size-- > 0) {
+		pte_index = GET_PTE_INDEX(vaddr);
+		pte[pte_index] = get_paddr(1, pf);
+		vaddr += PAGE_SIZE;
+	}
+	/*
+	//lock_acquire(&mem_pool.lock);
 	void *paddr = get_paddr(size, pf);
 	if(paddr == NULL) {
-		lock_release(&mem_pool.lock);
+		//lock_release(&mem_pool.lock);
 		return NULL;
 	}
 	vp_map((void*) vaddr, paddr, size, pf);
-	lock_release(&mem_pool.lock);
-	return (void*) vaddr;
+	//lock_release(&mem_pool.lock);
+	*/
+	return (void*) _vaddr;
 }
 
 

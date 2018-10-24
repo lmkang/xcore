@@ -37,7 +37,7 @@
 #define STACK_SIZE 8192
 
 // total memory size is placed at 0x90000
-#define TOTAL_MEM_SIZE_ADDR 0x90000
+#define TOTAL_MEM_SIZE_PADDR 0x90000
 
 // memory management bitmap physic address
 #define MM_BITMAP_PADDR 0x7c0000

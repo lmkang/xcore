@@ -69,17 +69,20 @@ void kmain(struct multiboot *mboot_ptr) {
 	get_total_mem(mboot_ptr);
 	
 	// 初始化所有模块
-	init_all(*((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)));
+	init_all();
 	
 	// 打印总物理内存容量
-	printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_ADDR)) / (1024 * 1024));
+	printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_PADDR)) / (1024 * 1024));
 	
-	//thread_start("k_thread_a", 31, k_thread_a, "A_");
+	thread_start("k_thread_a", 31, k_thread_a, "A_");
 	//thread_start("k_thread_b", 8, k_thread_b, "B_");
 	process_execute(u_prog_a, "u_prog_a");
 	//process_execute(u_prog_b, "u_prog_b");
 	
 	enable_intr();
+	
+	//uint32_t *tmp = (uint32_t*) get_pages(USER_STACK3_VADDR, 1);
+	//printk("0xbffffffc : %x\n", *((uint32_t*) 0xbffffffc));
 	
 	//while(1) {
 		//console_printk("Main ");
@@ -91,7 +94,7 @@ void kmain(struct multiboot *mboot_ptr) {
 
 // 获取总物理内存容量,存在TOTAL_MEM_SIZE_ADDR地址处
 void get_total_mem(struct multiboot *mboot_ptr) {
-	uint32_t *mem_size_addr = (uint32_t *) P2V(TOTAL_MEM_SIZE_ADDR);
+	uint32_t *mem_size_addr = (uint32_t *) P2V(TOTAL_MEM_SIZE_PADDR);
 	if (CHECK_FLAG(mboot_ptr->flags, 0)) {
         *mem_size_addr = mboot_ptr->mem_lower * 1024 + mboot_ptr->mem_upper * 1024 + 1024 * 1024;
     }
@@ -100,14 +103,14 @@ void get_total_mem(struct multiboot *mboot_ptr) {
 void k_thread_a(void *arg) {
 	char *param = (char*) arg;
 	while(1) {
-		console_printk("%s, a : %d ", param, a);
+		console_printk("%s%d ", param, a);
 	}
 }
 
 void k_thread_b(void *arg) {
 	char *param = (char*) arg;
 	while(1) {
-		console_printk("%s, b : %d ", param, b);
+		console_printk("%s%d ", param, b);
 	}
 }
 
@@ -118,7 +121,9 @@ void u_prog_a(void) {
 }
 
 void u_prog_b(void) {
-	++b;
+	while(1) {
+		++b;
+	}
 }
 
 
