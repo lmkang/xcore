@@ -22,6 +22,8 @@ void init_kernel_vmm();
 
 void init_mem_pool(uint32_t mem_size);
 
+uint32_t kern_v2p(uint32_t vaddr);
+
 void *kmalloc(uint32_t size, enum pool_flag pf);
 
 void kfree(void *vaddr, uint32_t size);

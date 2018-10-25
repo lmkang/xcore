@@ -47,7 +47,7 @@ void pgdir_activate(struct task_struct *pthread) {
 	// 如果不重新安装页表的话,线程就会使用上一个进程的页表了
 	uint32_t pgdir = V2P((uint32_t) pgd_kern);
 	if(pthread->pgdir != NULL) {
-		pgdir = V2P((uint32_t) pthread->pgdir);
+		pgdir = kern_v2p((uint32_t) pthread->pgdir);
 	}
 	__asm__ __volatile__("mov %0, %%cr3" : : "r"(pgdir));
 }
@@ -78,7 +78,6 @@ uint32_t *create_pgdir(void) {
 	uint32_t pgd_index = GET_PGD_INDEX(KERNEL_OFFSET);
 	memcpy((uint32_t*) &pgdir_vaddr[pgd_index], \
 		(uint32_t*) &pgd_kern[pgd_index], 1024);
-	pgdir_vaddr[1023] = V2P((uint32_t) pgdir_vaddr);
 	// 返回页目录地址
 	return pgdir_vaddr;
 }
