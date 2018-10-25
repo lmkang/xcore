@@ -16,10 +16,10 @@ struct memory_pool {
 };
 
 // 内核页目录数组
-pgd_t pgd_kern[PAGE_PGD_SIZE] __attribute__((aligned(PAGE_SIZE)));
+uint32_t pgd_kern[PAGE_PGD_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
 // 内核页表数组
-static pte_t pte_kern[PAGE_PTE_COUNT][PAGE_PTE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+static uint32_t pte_kern[PAGE_PTE_COUNT][PAGE_PTE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
 // 内核物理内存池
 static struct memory_pool kernel_pool;
@@ -27,9 +27,7 @@ static struct memory_pool kernel_pool;
 static struct memory_pool user_pool;
 
 // 内核虚拟地址池
-static struct vaddr_pool kernel_vaddr;
-// 用户虚拟地址池
-static struct vaddr_pool user_vaddr;
+static struct vaddr_pool kernel_vaddr_pool;
 
 // 初始化内核虚拟地址
 void init_kernel_vmm() {
@@ -77,12 +75,12 @@ void init_mem_pool(uint32_t mem_size) {
 	
 	lock_init(&kernel_pool.lock);
 	
-	// -------- kernel_vaddr -------------
-	kernel_vaddr.vaddr_start = KERNEL_VADDR_START;
-	kernel_vaddr.vaddr_btmp.byte_len = kernel_btmp_len;
-	kernel_vaddr.vaddr_btmp.bits = (void*) P2V(MM_BITMAP_PADDR + kernel_btmp_len);
+	// -------- kernel_vaddr_pool -------------
+	kernel_vaddr_pool.vaddr_start = KERNEL_VADDR_START;
+	kernel_vaddr_pool.vaddr_btmp.byte_len = kernel_btmp_len;
+	kernel_vaddr_pool.vaddr_btmp.bits = (void*) P2V(MM_BITMAP_PADDR + kernel_btmp_len);
 	
-	init_bitmap(&kernel_vaddr.vaddr_btmp);
+	init_bitmap(&kernel_vaddr_pool.vaddr_btmp);
 	
 	// -------- user_pool ---------------
 	uint32_t user_pages = total_pages - kernel_pages;
@@ -96,14 +94,6 @@ void init_mem_pool(uint32_t mem_size) {
 	init_bitmap(&user_pool.pool_btmp);
 	
 	lock_init(&user_pool.lock);
-	
-	// -------- user_vaddr --------------
-	user_vaddr.vaddr_start = USER_VADDR_START;
-	user_vaddr.vaddr_btmp.byte_len = user_btmp_len;
-	user_vaddr.vaddr_btmp.bits = \
-		(void*) P2V(MM_BITMAP_PADDR + kernel_btmp_len * 2 + user_btmp_len);
-	
-	init_bitmap(&user_vaddr.vaddr_btmp);
 }
 
 // kernel space virtual address to physic address
@@ -118,19 +108,22 @@ uint32_t kern_v2p(uint32_t vaddr) {
 // 获取虚拟地址
 static void *get_vaddr(uint32_t page_count, enum pool_flag pf) {
 	ASSERT((pf == PF_KERNEL) || (pf == PF_USER));
-	struct vaddr_pool va_pool;
+	int v_index;
+	uint32_t vaddr_start;
 	if(pf == PF_KERNEL) {
-		va_pool = kernel_vaddr;
+		v_index = alloc_bitmap(&kernel_vaddr_pool.vaddr_btmp, page_count);
+		vaddr_start = kernel_vaddr_pool.vaddr_start;
 	} else if(pf == PF_USER) {
-		va_pool = user_vaddr;
+		struct task_struct *pthread = current_thread();
+		v_index = alloc_bitmap(&pthread->prog_vaddr.vaddr_btmp, page_count);
+		vaddr_start = pthread->prog_vaddr.vaddr_start;
 	} else {
 		return NULL;
 	}
-	int v_index = alloc_bitmap(&va_pool.vaddr_btmp, page_count);
 	if(v_index == -1) {
 		return NULL;
 	}
-	return (void*) (va_pool.vaddr_start + v_index * PAGE_SIZE);
+	return (void*) (vaddr_start + v_index * PAGE_SIZE);
 }
 
 // 获取物理地址
@@ -163,7 +156,7 @@ static void vp_map(void *vaddr, void *paddr, uint32_t size, enum pool_flag pf) {
 		_paddr |= (PAGE_US_U | PAGE_P_1 | PAGE_RW_W);
 	}
 	uint32_t pgd_index;
-	pte_t *pte;
+	uint32_t *pte;
 	uint32_t pte_index;
 	while(size-- > 0) {
 		if(pf == PF_KERNEL) {
@@ -183,9 +176,9 @@ static void vp_map(void *vaddr, void *paddr, uint32_t size, enum pool_flag pf) {
 static void vp_unmap(void *vaddr, uint32_t size) {
 	ASSERT(vaddr != NULL);
 	uint32_t _vaddr = (uint32_t) vaddr;
-	uint32_t v_index = (_vaddr - kernel_vaddr.vaddr_start) / PAGE_SIZE;
+	uint32_t v_index = (_vaddr - kernel_vaddr_pool.vaddr_start) / PAGE_SIZE;
 	for(uint32_t i = v_index; i < v_index + size; i++) {
-		set_bitmap(&kernel_vaddr.vaddr_btmp, i, 0);
+		set_bitmap(&kernel_vaddr_pool.vaddr_btmp, i, 0);
 	}
 	struct memory_pool mem_pool;
 	enum pool_flag pf;
@@ -203,7 +196,7 @@ static void vp_unmap(void *vaddr, uint32_t size) {
 	} else if(pf == PF_USER) {
 		pgd_index = GET_PGD_INDEX(_vaddr) + 256;
 	}
-	pte_t *pte = pte_kern[pgd_index];
+	uint32_t *pte = pte_kern[pgd_index];
 	uint32_t pte_index = GET_PTE_INDEX(_vaddr);
 	uint32_t p_index = (pte[pte_index] - mem_pool.paddr_start) / PAGE_SIZE;
 	for(uint32_t i = p_index; i < p_index + size; i++) {
@@ -271,22 +264,26 @@ void *get_pages(uint32_t vaddr, uint32_t size) {
 	} else {
 		return NULL;
 	}
-	pgd_t *pgd = (uint32_t*) current_thread()->pgdir;
+	uint32_t *pgd = (uint32_t*) current_thread()->pgdir;
 	uint32_t _vaddr = vaddr;
 	uint32_t pgd_index;
 	uint32_t pte_index;
 	while(size-- > 0) {
-		pgd_index = GET_PGD_INDEX(vaddr);
-		pte_index = GET_PTE_INDEX(vaddr);
+		pgd_index = GET_PGD_INDEX(_vaddr);
+		pte_index = GET_PTE_INDEX(_vaddr);
+		lock_acquire(&kernel_pool.lock);
 		void *tmp_vaddr = get_vaddr(1, PF_KERNEL);
 		void *tmp_paddr = get_paddr(1, PF_KERNEL);
 		vp_map(tmp_vaddr, tmp_paddr, 1, PF_KERNEL);
+		lock_release(&kernel_pool.lock);
 		pgd[pgd_index] = (uint32_t) tmp_paddr | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
-		uint32_t *_tmp_vaddr = (uint32_t*) tmp_vaddr;
-		_tmp_vaddr[pte_index] = (uint32_t) get_paddr(1, pf) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
-		vaddr += PAGE_SIZE;
+		((uint32_t*) tmp_vaddr)[pte_index] = \
+			(uint32_t) get_paddr(1, pf) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
+		set_bitmap(&kernel_vaddr_pool.vaddr_btmp, 
+			((uint32_t) tmp_vaddr - kernel_vaddr_pool.vaddr_start) / PAGE_SIZE, 0);
+		_vaddr += PAGE_SIZE;
 	}
-	return (void*) _vaddr;
+	return (void*) vaddr;
 }
 
 

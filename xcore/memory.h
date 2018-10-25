@@ -16,8 +16,6 @@ struct vaddr_pool {
 	uint32_t vaddr_start; // 虚拟地址起始地址
 };
 
-extern pgd_t pgd_kern[PAGE_PGD_SIZE];
-
 void init_kernel_vmm();
 
 void init_mem_pool(uint32_t mem_size);

@@ -74,10 +74,10 @@ void kmain(struct multiboot *mboot_ptr) {
 	// 打印总物理内存容量
 	printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_PADDR)) / (1024 * 1024));
 	
-	//thread_start("k_thread_a", 31, k_thread_a, "A_");
-	//thread_start("k_thread_b", 8, k_thread_b, "B_");
+	thread_start("k_thread_a", 31, k_thread_a, "A_");
+	thread_start("k_thread_b", 8, k_thread_b, "B_");
 	process_execute(u_prog_a, "u_prog_a");
-	//process_execute(u_prog_b, "u_prog_b");
+	process_execute(u_prog_b, "u_prog_b");
 	
 	enable_intr();
 	

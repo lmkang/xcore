@@ -15,7 +15,4 @@ typedef unsigned long long int uint64_t;
 #define true 1
 #define false 0
 
-#define pgd_t uint32_t // 页目录数据类型
-#define pte_t uint32_t // 页表数据类型
-
 #endif
