@@ -22,57 +22,59 @@
 
 #define IDT_ENTRY_COUNT 0x81 // 支持的中断数
 
-#define EFLAGS_IF 0x00000200 // eflags寄存器中的if位为1
+#define EFLAGS_IF 0x00000200 // eflags寄存器中的IF位为1
 #define GET_EFLAGS(EFLAGS_VAR) __asm__ __volatile__("pushfl; popl %0" : "=g"(EFLAGS_VAR))
 
-extern void intr_func0();
-extern void intr_func1();
-extern void intr_func2();
-extern void intr_func3();
-extern void intr_func4();
-extern void intr_func5();
-extern void intr_func6();
-extern void intr_func7();
-extern void intr_func8();
-extern void intr_func9();
-extern void intr_func10();
-extern void intr_func11();
-extern void intr_func12();
-extern void intr_func13();
-extern void intr_func14();
-extern void intr_func15();
-extern void intr_func16();
-extern void intr_func17();
-extern void intr_func18();
-extern void intr_func19();
-extern void intr_func20();
-extern void intr_func21();
-extern void intr_func22();
-extern void intr_func23();
-extern void intr_func24();
-extern void intr_func25();
-extern void intr_func26();
-extern void intr_func27();
-extern void intr_func28();
-extern void intr_func29();
-extern void intr_func30();
-extern void intr_func31();
-extern void intr_func32();
-extern void intr_func33();
-extern void intr_func34();
-extern void intr_func35();
-extern void intr_func36();
-extern void intr_func37();
-extern void intr_func38();
-extern void intr_func39();
-extern void intr_func40();
-extern void intr_func41();
-extern void intr_func42();
-extern void intr_func43();
-extern void intr_func44();
-extern void intr_func45();
-extern void intr_func46();
-extern void intr_func47();
+extern void intr_func0(void);
+extern void intr_func1(void);
+extern void intr_func2(void);
+extern void intr_func3(void);
+extern void intr_func4(void);
+extern void intr_func5(void);
+extern void intr_func6(void);
+extern void intr_func7(void);
+extern void intr_func8(void);
+extern void intr_func9(void);
+extern void intr_func10(void);
+extern void intr_func11(void);
+extern void intr_func12(void);
+extern void intr_func13(void);
+extern void intr_func14(void);
+extern void intr_func15(void);
+extern void intr_func16(void);
+extern void intr_func17(void);
+extern void intr_func18(void);
+extern void intr_func19(void);
+extern void intr_func20(void);
+extern void intr_func21(void);
+extern void intr_func22(void);
+extern void intr_func23(void);
+extern void intr_func24(void);
+extern void intr_func25(void);
+extern void intr_func26(void);
+extern void intr_func27(void);
+extern void intr_func28(void);
+extern void intr_func29(void);
+extern void intr_func30(void);
+extern void intr_func31(void);
+extern void intr_func32(void);
+extern void intr_func33(void);
+extern void intr_func34(void);
+extern void intr_func35(void);
+extern void intr_func36(void);
+extern void intr_func37(void);
+extern void intr_func38(void);
+extern void intr_func39(void);
+extern void intr_func40(void);
+extern void intr_func41(void);
+extern void intr_func42(void);
+extern void intr_func43(void);
+extern void intr_func44(void);
+extern void intr_func45(void);
+extern void intr_func46(void);
+extern void intr_func47(void);
+
+extern uint32_t syscall_handler(void); // 系统调用中断处理函数
 
 // 中断描述符表
 struct idt_entry {
@@ -150,7 +152,8 @@ static void init_idt_entries(void) {
 	set_idt_entry(47, IDT_ENTRY_ATTR_DPL0, intr_func47);
 	// 单独处理系统调用,系统调用对应的中断门DPL为3
 	// 中断处理程序为单独的syscal_handler
-	//set_idt_entry(&idt_entries[0x80], IDT_ENTRY_ATTR_DPL3, syscall_handler);
+	set_idt_entry(0x80, IDT_ENTRY_ATTR_DPL3, syscall_handler);
+	
 	put_str("init_idt_entries done\n");
 }
 

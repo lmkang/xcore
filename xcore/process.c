@@ -12,6 +12,8 @@ extern struct list thread_all_list; // 所有任务队列
 
 extern uint32_t pgd_kern[PAGE_PGD_SIZE]; // 内核页目录表
 
+extern void intr_exit(void); // 定义在idtasm.S源文件
+
 // 构建用户进程初始上下文信息
 void start_process(void *filename) {
 	ASSERT(filename != NULL);
