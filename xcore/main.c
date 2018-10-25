@@ -9,6 +9,7 @@
 #include "keyboard.h"
 #include "process.h"
 #include "string.h"
+#include "syscall.h"
 
 #define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
 
@@ -27,6 +28,7 @@ __attribute__((section(".init.data"))) uint32_t *pte_low2 = (uint32_t*) 0x3000;
 __attribute__((section(".init.data"))) uint32_t *pte_high1 = (uint32_t*) 0x4000;
 __attribute__((section(".init.data"))) uint32_t *pte_high2 = (uint32_t*) 0x5000;
 
+// 入口
 __attribute__((section(".init.text"))) void entry() {
 	pgd_tmp[0] = (uint32_t) pte_low1 | PAGE_RW_W | PAGE_P_1;
 	pgd_tmp[GET_PGD_INDEX(KERNEL_OFFSET)] = (uint32_t) pte_high1 | PAGE_RW_W | PAGE_P_1;
@@ -62,8 +64,9 @@ void k_thread_b(void *);
 void u_prog_a(void);
 void u_prog_b(void);
 
-int a = 0, b = 0;
+int a_pid = 0, b_pid = 0;
 
+// 内核主函数
 void kmain(struct multiboot *mboot_ptr) {
 	// 获取总物理内存容量
 	get_total_mem(mboot_ptr);
@@ -74,12 +77,16 @@ void kmain(struct multiboot *mboot_ptr) {
 	// 打印总物理内存容量
 	printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_PADDR)) / (1024 * 1024));
 	
-	thread_start("k_thread_a", 31, k_thread_a, "A_");
-	thread_start("k_thread_b", 8, k_thread_b, "B_");
 	process_execute(u_prog_a, "u_prog_a");
 	process_execute(u_prog_b, "u_prog_b");
 	
 	enable_intr();
+	
+	console_printk("main_pid : %x\n", sys_getpid());
+	
+	thread_start("k_thread_a", 31, k_thread_a, "A_");
+	thread_start("k_thread_b", 8, k_thread_b, "B_");
+	
 	
 	//uint32_t *tmp = (uint32_t*) get_pages(USER_STACK3_VADDR, 1);
 	//printk("0xbffffffc : %x\n", *((uint32_t*) 0xbffffffc));
@@ -102,28 +109,26 @@ void get_total_mem(struct multiboot *mboot_ptr) {
 
 void k_thread_a(void *arg) {
 	char *param = (char*) arg;
-	while(1) {
-		console_printk("%s%d ", param, a);
-	}
+	console_printk("thread_a_pid : %x\n", sys_getpid());
+	console_printk("prog_a_pid : %x\n", a_pid);
+	while(1);
 }
 
 void k_thread_b(void *arg) {
 	char *param = (char*) arg;
-	while(1) {
-		console_printk("%s%d ", param, b);
-	}
+	console_printk("thread_b_pid : %x\n", sys_getpid());
+	console_printk("prog_b_pid : %x\n", b_pid);
+	while(1);
 }
 
 void u_prog_a(void) {
-	while(1) {
-		++a;
-	}
+	a_pid = getpid();
+	while(1);
 }
 
 void u_prog_b(void) {
-	while(1) {
-		++b;
-	}
+	b_pid = getpid();
+	while(1);
 }
 
 

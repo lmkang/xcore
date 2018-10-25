@@ -54,6 +54,7 @@
 // user stack3 virtual address
 #define USER_STACK3_VADDR (KERNEL_OFFSET - 0x1000)
 
+// user program default priority
 #define USER_DEFAULT_PRIORITY 31
 
 // virtual address to physic address

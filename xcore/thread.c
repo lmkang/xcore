@@ -6,13 +6,24 @@
 #include "interrupt.h"
 #include "print.h"
 #include "process.h"
+#include "sync.h"
 
 struct task_struct *main_thread; // 主线程PCB
 struct list thread_ready_list; // 就绪队列
 struct list thread_all_list; // 所有任务队列
 static struct list_ele *thread_tag; // 用于保存队列中的线程节点
+struct lock pid_lock; // pid锁
 
 extern void switch_to(struct task_struct *cur_task, struct task_struct *next_task);
+
+// 分配pid
+static pid_t alloc_pid(void) {
+	static pid_t next_pid = 0;
+	lock_acquire(&pid_lock);
+	++next_pid;
+	lock_release(&pid_lock);
+	return next_pid;
+}
 
 struct task_struct *current_thread(void) {
 	uint32_t esp;
@@ -47,6 +58,7 @@ void thread_create(struct task_struct *pthread, thread_func func, void *func_arg
 // 初始化线程基本信息
 void init_thread(struct task_struct *pthread, char *name, uint8_t priority) {
 	memset(pthread, 0, sizeof(*pthread));
+	pthread->pid = alloc_pid();
 	strcpy(pthread->name, name);
 	// main方法被封装为主线程
 	if(pthread == main_thread) {
@@ -151,6 +163,7 @@ void thread_unblock(struct task_struct *pthread) {
 void thread_init(void) {
 	list_init(&thread_ready_list);
 	list_init(&thread_all_list);
+	lock_init(&pid_lock);
 	create_main_thread();
 	printk("thread_init done\n");
 }
