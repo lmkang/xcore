@@ -8,13 +8,23 @@
 #include "process.h"
 #include "sync.h"
 
-struct task_struct *main_thread; // 主线程PCB
+struct task_struct *main_thread; // 主线程
+struct task_struct *idle_thread; // idle线程
 struct list thread_ready_list; // 就绪队列
 struct list thread_all_list; // 所有任务队列
 static struct list_ele *thread_tag; // 用于保存队列中的线程节点
 struct lock pid_lock; // pid锁
 
 extern void switch_to(struct task_struct *cur_task, struct task_struct *next_task);
+
+// 系统空闲时运行的线程
+static void idle(void) {
+	while(1) {
+		thread_block(TASK_BLOCKED);
+		// 执行hlt时必须要保证处在开中断的情况下
+		__asm__ __volatile__("sti; hlt" : : : "memory");
+	}
+}
 
 // 分配pid
 static pid_t alloc_pid(void) {
@@ -118,6 +128,10 @@ void schedule(void) {
 		// 若此线程需要某事件发生后才能继续上CPU运行,
 		// 不需要将其加入队列,因为当前线程不在就绪队列中
 	}
+	// 如果就绪队列中没有可运行的任务,唤醒idle
+	if(list_empty(&thread_ready_list)) {
+		thread_unblock(idle_thread);
+	}
 	ASSERT(!list_empty(&thread_ready_list));
 	thread_tag = NULL;
 	// 将thread_ready_list队列中的第一个就绪线程弹出,准备调度上CPU
@@ -159,12 +173,25 @@ void thread_unblock(struct task_struct *pthread) {
 	set_intr_status(old_status);
 }
 
+// 主动让出CPU,换其他线程运行
+void thread_yield(void) {
+	struct task_struct *cur_thread = current_thread();
+	enum intr_status old_status = get_intr_status();
+	disable_intr();
+	ASSERT(!list_find(&thread_ready_list, &cur_thread->general_tag));
+	list_append(&thread_ready_list, &cur_thread->general_tag);
+	cur_thread->status = TASK_READY;
+	schedule();
+	set_intr_status(old_status);
+}
+
 // 初始化线程环境
 void thread_init(void) {
 	list_init(&thread_ready_list);
 	list_init(&thread_all_list);
 	lock_init(&pid_lock);
 	create_main_thread();
+	idle_thread = thread_start("idle", 10, idle, NULL);
 	printk("thread_init done\n");
 }
 

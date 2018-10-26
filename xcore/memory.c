@@ -222,21 +222,25 @@ void *kmalloc(uint32_t size, enum pool_flag pf) {
 	}
 	uint32_t count = size;
 	uint32_t _vaddr = (uint32_t) vaddr;
-	while(count-- > 0) {
-		void *paddr = get_paddr(pf);
-		if(paddr == NULL) {
-			if(count + 1 == size) { // 未分配任何物理页
-				return NULL;
-			} else { // 释放掉原来已分配的内存
-				uint32_t tmp_vaddr = (uint32_t) vaddr;
-				for(uint32_t i = 0; i < size - (count + 1); i++) {
-					vp_unmap((void*) tmp_vaddr);
-					tmp_vaddr += PAGE_SIZE;
+	if(pf == PF_KERNEL) {
+		while(count-- > 0) {
+			void *paddr = get_paddr(pf);
+			if(paddr == NULL) {
+				if(count + 1 == size) { // 未分配任何物理页
+					return NULL;
+				} else { // 释放掉原来已分配的内存
+					uint32_t tmp_vaddr = (uint32_t) vaddr;
+					for(uint32_t i = 0; i < size - (count + 1); i++) {
+						vp_unmap((void*) tmp_vaddr);
+						tmp_vaddr += PAGE_SIZE;
+					}
 				}
 			}
+			vp_map((void*) _vaddr, paddr, pf);
+			_vaddr += PAGE_SIZE;
 		}
-		vp_map((void*) _vaddr, paddr, pf);
-		_vaddr += PAGE_SIZE;
+	} else if(pf == PF_USER) {
+		get_pages(_vaddr, size);
 	}
 	return vaddr;
 }

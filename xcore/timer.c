@@ -3,6 +3,7 @@
 #include "thread.h"
 #include "interrupt.h"
 #include "debug.h"
+#include "global.h"
 
 #define IRQ0_FREQUENCY 100
 #define INPUT_FREQUENCY 1193180
@@ -12,6 +13,8 @@
 #define COUNTER_MODE 2
 #define READ_WRITE_LATCH 3
 #define PIT_CONTROL_PORT 0x43
+
+#define MILLSECONDS_PER_INTR (1000 / IRQ0_FREQUENCY)
 
 uint32_t ticks; // ticks是内核自中断开启以来总共的嘀嗒数
 
@@ -37,6 +40,22 @@ static void intr_timer_handler(void) {
 	} else {
 		--cur_thread->ticks;
 	}
+}
+
+// 以ticks为单位的sleep,任何时间形式的sleep会转换成ticks形式
+static void ticks2sleep(uint32_t sleep_ticks) {
+	uint32_t start_ticks = ticks;
+	// 若间隔的ticks数不够就让出CPU
+	while(ticks - start_ticks < sleep_ticks) {
+		thread_yield();
+	}
+}
+
+// 以毫秒为单位的sleep,1s = 1000ms
+void sleep(uint32_t millseconds) {
+	uint32_t sleep_ticks = DIV_ROUND_UP(millseconds, MILLSECONDS_PER_INTR);
+	ASSERT(sleep_ticks > 0);
+	ticks2sleep(sleep_ticks);
 }
 
 // 初始化PIT8253

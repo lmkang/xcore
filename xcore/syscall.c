@@ -3,6 +3,7 @@
 #include "print.h"
 #include "syscall.h"
 #include "string.h"
+#include "memory.h"
 
 #define SYSCALL_COUNT 32
 
@@ -71,6 +72,8 @@ uint32_t sys_write(char *str) {
 void syscall_init(void) {
 	syscall_table[SYS_GETPID] = sys_getpid;
 	syscall_table[SYS_WRITE] = sys_write;
+	syscall_table[SYS_MALLOC] = sys_malloc;
+	syscall_table[SYS_FREE] = sys_free;
 	
 	printk("syscall_init done\n");
 }
@@ -87,7 +90,15 @@ uint32_t write(char *str) {
 	return _syscall1(SYS_WRITE, str);
 }
 
+// 申请size字节大小的内存
+void *malloc(uint32_t size) {
+	return (void*) _syscall1(SYS_MALLOC, size);
+}
 
+// 释放ptr指向的内存
+void free(void *ptr) {
+	_syscall1(SYS_FREE, ptr);
+}
 
 
 
