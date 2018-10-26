@@ -73,6 +73,7 @@ struct task_struct {
 	struct list_ele all_list_tag; // 线程在thread_all_list中的节点
 	uint32_t *pgdir; // 进程的页目录虚拟地址,如果是线程则为NULL
 	struct vaddr_pool prog_vaddr; // 用户进程的虚拟地址池
+	struct mem_block_desc prog_block_descs[MEM_BLOCK_DESC_COUNT]; // 用户进程内存块描述符
 	uint32_t stack_magic; // 魔数,用于检测栈的溢出
 };
 

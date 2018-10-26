@@ -105,6 +105,7 @@ void process_execute(void *filename, char *name) {
 	create_user_vaddr_bitmap(thread);
 	thread_create(thread, start_process, filename);
 	thread->pgdir = create_pgdir();
+	init_block_desc(thread->prog_block_descs);
 	// 放入就绪队列和全部队列
 	enum intr_status old_status = get_intr_status();
 	disable_intr();

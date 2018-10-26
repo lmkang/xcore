@@ -13,11 +13,11 @@ void put_str(char *str);
 
 void put_hex(uint32_t i);
 
-uint32_t sprintf(char *buf, const char *format, ...);
-
 uint32_t printk(const char *format, ...);
 
 void console_init();
+
+void console_put_str(char *str);
 
 uint32_t console_printk(const char *format, ...);
 

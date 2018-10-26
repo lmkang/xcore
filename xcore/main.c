@@ -10,6 +10,7 @@
 #include "process.h"
 #include "string.h"
 #include "syscall.h"
+#include "stdio.h"
 
 #define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
 
@@ -77,23 +78,15 @@ void kmain(struct multiboot *mboot_ptr) {
 	// 打印总物理内存容量
 	printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_PADDR)) / (1024 * 1024));
 	
-	process_execute(u_prog_a, "u_prog_a");
-	process_execute(u_prog_b, "u_prog_b");
+	//process_execute(u_prog_a, "u_prog_a");
+	//process_execute(u_prog_b, "u_prog_b");
 	
 	enable_intr();
 	
-	console_printk("main_pid : %x\n", sys_getpid());
+	//console_printk("main_pid : %x\n", sys_getpid());
 	
 	thread_start("k_thread_a", 31, k_thread_a, "A_");
 	thread_start("k_thread_b", 8, k_thread_b, "B_");
-	
-	
-	//uint32_t *tmp = (uint32_t*) get_pages(USER_STACK3_VADDR, 1);
-	//printk("0xbffffffc : %x\n", *((uint32_t*) 0xbffffffc));
-	
-	//while(1) {
-		//console_printk("Main ");
-	//}
 	
 	while(1); // 使CPU悬停在此
 	
@@ -109,25 +102,103 @@ void get_total_mem(struct multiboot *mboot_ptr) {
 
 void k_thread_a(void *arg) {
 	char *param = (char*) arg;
-	console_printk("thread_a_pid : %x\n", sys_getpid());
-	console_printk("prog_a_pid : %x\n", a_pid);
+	void *addr1;
+	void *addr2;
+	void *addr3;
+	void *addr4;
+	void *addr5;
+	void *addr6;
+	void *addr7;
+	console_printk("thread_a start\n");
+	int max = 50;
+	while(max-- > 0) {
+		int size = 128;
+		addr1 = sys_malloc(size);
+		size *= 2;
+		addr2 = sys_malloc(size);
+		size *= 2;
+		addr3 = sys_malloc(size);
+		sys_free(addr1);
+		addr4 = sys_malloc(size);
+		size *= (2 << 7);
+		addr5 = sys_malloc(size);
+		addr6 = sys_malloc(size);
+		sys_free(addr5);
+		size *= 2;
+		addr7 = sys_malloc(size);
+		sys_free(addr6);
+		sys_free(addr7);
+		sys_free(addr2);
+		sys_free(addr3);
+		sys_free(addr4);
+	}
+	console_printk("thread_a end\n");
 	while(1);
 }
 
 void k_thread_b(void *arg) {
 	char *param = (char*) arg;
-	console_printk("thread_b_pid : %x\n", sys_getpid());
-	console_printk("prog_b_pid : %x\n", b_pid);
+	void *addr1;
+	void *addr2;
+	void *addr3;
+	void *addr4;
+	void *addr5;
+	void *addr6;
+	void *addr7;
+	void *addr8;
+	void *addr9;
+	int max = 50;
+	console_printk("thread_b start\n");
+	while(max-- > 0) {
+		int size = 9;
+		addr1 = sys_malloc(size);
+		size *= 2;
+		addr2 = sys_malloc(size);
+		size *= 2;
+		sys_free(addr2);
+		addr3 = sys_malloc(size);
+		sys_free(addr1);
+		addr4 = sys_malloc(size);
+		addr5 = sys_malloc(size);
+		addr6 = sys_malloc(size);
+		sys_free(addr5);
+		size *= 2;
+		addr7 = sys_malloc(size);
+		sys_free(addr6);
+		sys_free(addr7);
+		sys_free(addr3);
+		sys_free(addr4);
+		size *= (2 << 4);
+		addr1 = sys_malloc(size);
+		addr2 = sys_malloc(size);
+		addr3 = sys_malloc(size);
+		addr4 = sys_malloc(size);
+		addr5 = sys_malloc(size);
+		addr6 = sys_malloc(size);
+		addr7 = sys_malloc(size);
+		addr8 = sys_malloc(size);
+		addr9 = sys_malloc(size);
+		sys_free(addr1);
+		sys_free(addr2);
+		sys_free(addr3);
+		sys_free(addr4);
+		sys_free(addr5);
+		sys_free(addr6);
+		sys_free(addr7);
+		sys_free(addr8);
+		sys_free(addr9);
+	}
+	console_printk("thread_b end\n");
 	while(1);
 }
 
 void u_prog_a(void) {
-	a_pid = getpid();
+	printf("prog_a_pid : %x\n", getpid());
 	while(1);
 }
 
 void u_prog_b(void) {
-	b_pid = getpid();
+	printf("prog_b_pid : %x\n", getpid());
 	while(1);
 }
 
