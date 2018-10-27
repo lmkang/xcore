@@ -2,6 +2,8 @@
 #include "global.h"
 #include "debug.h"
 #include "stdio.h"
+#include "x86.h"
+#include "timer.h"
 
 // 定义硬盘各寄存器的端口号
 #define reg_data(channel) (channel->port_base + 0)
@@ -39,6 +41,68 @@ uint8_t channel_count;
 
 // 有两个ide通道
 struct ide_channel channels[2];
+
+// 选择读写的硬盘
+static void select_disk(struct disk *disk) {
+	uint8_t reg_device = BIT_DEV_MBS | BIT_DEV_LBA;
+	if(disk->dev_no == 1) { // 从盘
+		reg_device |= BIT_DEV_DEV;
+	}
+	outb(reg_dev(disk->channel), reg_device);
+}
+
+// 向硬盘控制器写入起始扇区地址及要读写的扇区数
+static void select_sector(struct disk *disk, uint32_t lba_start, uint32_t sector_count) {
+	ASSERT(lba_start <= MAX_LBA);
+	struct ide_channel *channel = disk->channel;
+	// 写入要读写的扇区数,sector_count为0表示写入256个扇区
+	outb(reg_sector_count(channel), sector_count);
+	//写入lba地址,即扇区号
+	outb(reg_lba_low(channel), lba_start);
+	outb(reg_lba_mid(channel), lba_start >> 8);
+	outb(reg_lba_high(channel), lba_start >> 16);
+	// lba地址的24-27位要存储在device寄存器的0-3位
+	// 需要把device寄存器重写一次
+	outb(reg_dev(channel), BIT_DEV_MBS | BIT_DEV_LBA | \
+		(disk->dev_no == 1 ? BIT_DEV_DEV : 0) | lba_start >> 24);
+}
+
+// 向通道channel发命令cmd
+static void out_cmd(struct ide_channel *channel, uint8_t cmd) {
+	// 只要向硬盘发出了命令便置为true
+	// 硬盘中断处理程序需要根据它来判断
+	channel->expect_intr = true;
+	outb(reg_cmd(channel), cmd);
+}
+
+// 硬盘读入sector_count个扇区的数据到buf
+static void read_sector(struct disk *disk, void *buf, uint8_t sector_count) {
+	uint32_t byte_size;
+	if(sector_count == 0) {
+		byte_size = 256 * 512;
+	} else {
+		byte_size = sector_count * 512;
+	}
+	insw(reg_data(disk->channel), buf, byte_size / 2);
+}
+
+// 将buf中sector_count个扇区的数据写入硬盘
+static void write_sector(struct disk *disk, void *buf, uint8_t sector_count) {
+	uint32_t byte_size;
+	if(sector_count == 0) {
+		byte_size = 256 * 512;
+	} else {
+		byte_size = sector_count * 512;
+	}
+	outsw(reg_data(disk->channel), buf, byte_size / 2);
+}
+
+// 等待30秒
+static bool busy_wait(struct disk *disk) {
+	struct ide_channel *channel = disk->channel;
+	uint16_t millseconds = 30 * 1000;
+	
+}
 
 // 硬盘数据结构初始化
 void ide_init(void) {

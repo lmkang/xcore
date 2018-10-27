@@ -15,4 +15,14 @@ static inline uint8_t inb(uint16_t port) {
 	return data;
 }
 
+// 将addr处起始的count个字写入端口port
+static inline void outsw(uint16_t port, const void *addr, uint32_t count) {
+	__asm__ __volatile__("cld; rep outsw" : "+S"(addr), "+c"(count) : "d"(port));
+}
+
+// 将端口port读入的count个字写入addr
+static inline void insw(uint16_t port, void *addr, uint32_t count) {
+	__asm__ __volatile__("cld; rep insw" : "+D"(addr), "+c"(count) : "d"(port) : "memory");
+}
+
 #endif
