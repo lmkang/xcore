@@ -39,4 +39,12 @@ struct ide_channel {
 	struct disk devices[2]; // 一个通道连接两个硬盘,主和从
 };
 
+void ide_read(struct disk *disk, uint32_t lba_start, void *buf, uint32_t sector_count);
+
+void ide_write(struct disk *disk, uint32_t lba_start, void *buf, uint32_t sector_count);
+
+void intr_disk_handler(uint8_t irq_no);
+
+void ide_init(void);
+
 #endif

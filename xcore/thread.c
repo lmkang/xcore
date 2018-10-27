@@ -18,7 +18,7 @@ struct lock pid_lock; // pid锁
 extern void switch_to(struct task_struct *cur_task, struct task_struct *next_task);
 
 // 系统空闲时运行的线程
-static void idle(void) {
+static void idle(__attribute__((unused)) void *arg) {
 	while(1) {
 		thread_block(TASK_BLOCKED);
 		// 执行hlt时必须要保证处在开中断的情况下
