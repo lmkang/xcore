@@ -4,6 +4,8 @@
 #include "list.h"
 #include "memory.h"
 
+#define PROC_MAX_FILE_OPEN 8 // 进程最大打开文件数
+
 // 线程函数类型
 typedef void thread_func(void *);
 
@@ -69,6 +71,7 @@ struct task_struct {
 	uint8_t priority; // 线程优先级
 	uint8_t ticks; // 时钟嘀嗒数
 	uint32_t elapsed_ticks; // 任务已执行的时钟嘀嗒数
+	int32_t fd_table[PROC_MAX_FILE_OPEN]; // 文件描述符数组
 	struct list_ele general_tag; // 线程在一般队列中的节点
 	struct list_ele all_list_tag; // 线程在thread_all_list中的节点
 	uint32_t *pgdir; // 进程的页目录虚拟地址,如果是线程则为NULL

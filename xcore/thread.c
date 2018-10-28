@@ -83,6 +83,14 @@ void init_thread(struct task_struct *pthread, char *name, uint8_t priority) {
 	pthread->elapsed_ticks = 0;
 	pthread->pgdir = NULL;
 	pthread->stack_magic = 0x19940625; // 自定义的魔数
+	// 预留标准输入输出
+	pthread->fd_table[0] = 0;
+	pthread->fd_table[1] = 1;
+	pthread->fd_table[2] = 2;
+	// 其余全部置为-1
+	for(uint8_t i = 3; i < PROC_MAX_FILE_OPEN; i++) {
+		pthread->fd_table[i] = -1;
+	}
 }
 
 // 开始执行线程

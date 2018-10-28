@@ -7,6 +7,7 @@
 #include "keyboard.h"
 #include "syscall.h"
 #include "ide.h"
+#include "fs.h"
 
 void init_all() {
 	init_gdt(); // 初始化GDT
@@ -18,4 +19,5 @@ void init_all() {
 	keyboard_init(); // 初始化键盘
 	syscall_init(); // 初始化系统调用
 	ide_init(); // 初始化硬盘
+	fs_init(); // 初始化文件系统
 }

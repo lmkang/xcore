@@ -327,7 +327,6 @@ void ide_init(void) {
 	list_init(&partition_list);
 	// 一个ide通道有两个硬盘,根据硬盘数量算出ide通道数
 	channel_count = DIV_ROUND_UP(disk_count, 2);
-	printk("disk_count : %d, channel_count : %d\n", disk_count, channel_count);
 	struct ide_channel *channel;
 	uint8_t channel_no = 0, dev_no = 0;
 	// 处理每个通道上的硬盘
