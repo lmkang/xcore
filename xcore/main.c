@@ -11,6 +11,7 @@
 #include "string.h"
 #include "syscall.h"
 #include "stdio.h"
+#include "fs.h"
 
 #define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
 
@@ -78,15 +79,17 @@ void kmain(struct multiboot *mboot_ptr) {
 	// 打印总物理内存容量
 	printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_PADDR)) / (1024 * 1024));
 	
-	process_execute(u_prog_a, "u_prog_a");
-	process_execute(u_prog_b, "u_prog_b");
+	//process_execute(u_prog_a, "u_prog_a");
+	//process_execute(u_prog_b, "u_prog_b");
 	
-	enable_intr();
+	//enable_intr();
 	
 	//console_printk("main_pid : %x\n", sys_getpid());
 	
 	//thread_start("k_thread_a", 31, k_thread_a, "A_");
 	//thread_start("k_thread_b", 8, k_thread_b, "B_");
+	
+	sys_open("/file1", FO_CREATE);
 	
 	while(1); // 使CPU悬停在此
 	

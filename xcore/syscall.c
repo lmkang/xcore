@@ -4,6 +4,7 @@
 #include "syscall.h"
 #include "string.h"
 #include "memory.h"
+#include "fs.h"
 
 #define SYSCALL_COUNT 32
 
@@ -62,12 +63,6 @@ pid_t sys_getpid(void) {
 	return current_thread()->pid;
 }
 
-// 打印字符串
-uint32_t sys_write(char *str) {
-	console_put_str(str);
-	return strlen(str);
-}
-
 // 初始化系统调用
 void syscall_init(void) {
 	syscall_table[SYS_GETPID] = sys_getpid;
@@ -86,8 +81,8 @@ pid_t getpid(void) {
 }
 
 // 打印字符串
-uint32_t write(char *str) {
-	return _syscall1(SYS_WRITE, str);
+uint32_t write(int32_t fd, const void *buf, uint32_t count) {
+	return _syscall3(SYS_WRITE, fd, buf, count);
 }
 
 // 申请size字节大小的内存

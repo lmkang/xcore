@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "list.h"
+#include "inode.h"
 
 #define MAX_FILENAME_LEN 16 // 最大文件名长度
 
@@ -14,11 +15,28 @@
 
 #define BLOCK_SIZE 512 // 块字节大小
 
+#define MAX_PATH_LEN 512 // 路径最大长度
+
 // 文件类型
 enum file_type {
 	FT_UNKNOWN, // 不支持的文件类型
 	FT_FILE, // 普通文件
 	FT_DIRECTORY // 目录
+};
+
+// 打开文件的选项
+enum file_option {
+	FO_READONLY, // 只读
+	FO_WRITEONLY, // 只写
+	FO_READWRITE, // 读写
+	FO_CREATE = 4 // 创建
+};
+
+// 用来记录查找文件过程中已找到的上级路径
+struct path_record {
+	char searched_path[MAX_PATH_LEN]; // 查找过程中的父路径
+	struct directory *parent_dir; // 文件或目录所在的直接父目录
+	enum file_type f_type; // 文件类型
 };
 
 // 超级块
@@ -39,29 +57,13 @@ struct super_block {
 	uint8_t pad[460]; // 加上460字节,凑够512字节1扇区大小
 }__attribute__((packed));
 
-// inode结构
-struct inode {
-	uint32_t i_no; // inode编号
-	uint32_t i_size; // 文件大小或所有目录项大小之和
-	uint32_t open_count; // 记录此文件被打开的次数
-	bool write_flag; // 写文件不能并行,进程写文件前检查此标识
-	uint32_t sectors[13]; // sectors[0-11]是直接块,sectors[12]用来存储一级间接块指针
-	struct list_ele inode_tag;
-};
+int32_t get_path_depth(char *pathname);
 
-// 目录结构
-struct directory {
-	struct inode *inode;
-	uint32_t dir_pos; // 记录在目录内的偏移
-	uint8_t dir_buf[512]; // 目录的数据缓存
-};
+int32_t sys_open(const char *pathname, enum file_option f_opt);
 
-// 目录项结构
-struct dir_entry {
-	char filename[MAX_FILENAME_LEN]; // 普通文件或目录名称
-	uint32_t i_no; // inode编号
-	enum file_type f_type; // 文件类型
-};
+int32_t sys_close(int32_t fd);
+
+int32_t sys_write(int32_t fd, const void *buf, uint32_t count);
 
 void fs_init(void);
 
