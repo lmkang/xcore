@@ -297,7 +297,7 @@ int32_t sys_open(const char *pathname, enum file_option f_opt) {
 	if(dir_depth != searched_depth) {
 		// 中间目录不存在
 		printk("can not access %s : no such directory, subpath %s is not exist!\n", \
-			pathname, path_record.parent_dir);
+			pathname, path_record.searched_path);
 		dir_close(path_record.parent_dir);
 		return -1;
 	}
@@ -312,7 +312,7 @@ int32_t sys_open(const char *pathname, enum file_option f_opt) {
 		dir_close(path_record.parent_dir);
 		return -1;
 	}
-	if((f_opt & FO_CREATE) == FO_CREATE) {
+	if(f_opt & FO_CREATE) {
 		printk("creating file......\n");
 		fd = file_create(path_record.parent_dir, strrchr(pathname, '/') + 1, f_opt);
 		dir_close(path_record.parent_dir);
@@ -379,7 +379,11 @@ void fs_init(void) {
 	printk("searching filesystem......\n");
 	while(channel_no < channel_count) {
 		dev_no = 0;
-		while(dev_no < 1) { // 目前只有一块硬盘100MB
+		while(dev_no < 2) { // 目前只有一块硬盘100MB
+			if(dev_no == 0) { // 跳过主盘
+				++dev_no;
+				continue;
+			}
 			struct disk *disk = &channels[channel_no].devices[dev_no];
 			struct partition *part = disk->primary_parts;
 			while(part_index < 12) { // 4个主分区 + 8个逻辑分区
@@ -393,6 +397,7 @@ void fs_init(void) {
 					memset(sp_block, 0, SECTOR_SIZE);
 					// 读取分区超级块的魔数,判断是否存在文件系统
 					// 只支持自己的文件系统,若已存在则不再格式化
+					ide_read(disk, part->lba_start + 1, sp_block, 1);
 					if(sp_block->magic == 0x19940625) {
 						printk("%s has filesystem\n", part->name);
 					} else { // 不支持其他文件系统,一律按无文件系统处理
@@ -410,7 +415,7 @@ void fs_init(void) {
 	}
 	sys_free(sp_block);
 	// 确定默认操作的分区
-	char default_part[] = "sda1";
+	char default_part[] = "sdb1";
 	// 挂载分区
 	list_traversal(&partition_list, partition_mount, (int) default_part);
 	// 将当前分区的根目录打开

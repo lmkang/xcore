@@ -64,11 +64,12 @@ bool search_dir_entry(struct partition *part, struct directory *dir, \
 		// 遍历扇区中所有目录项
 		while(dir_entry_index < dir_entry_count) {
 			// 找到就直接复制整个目录项
+			printk("p_dir_ent->filename : %s, name : %s\n", p_dir_ent->filename, name);
 			if(!strcmp(p_dir_ent->filename, name)) {
 				memcpy(dir_ent, p_dir_ent, dir_entry_size);
 				sys_free(buf);
 				sys_free(all_blocks);
-				return false;
+				return true;
 			}
 			++dir_entry_index;
 			++p_dir_ent;

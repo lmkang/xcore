@@ -39,7 +39,7 @@
 #define CMD_WRITE_SECTOR 0x30 // 写扇区指令
 
 // 定义可读写的最大扇区数,调试用的
-#define MAX_LBA (100 * 1024 * 1024 / 512 - 1) // 只支持80MB硬盘
+#define MAX_LBA (10 * 1024 * 1024 / 512 - 1) // 只支持80MB硬盘
 
 // 按硬盘数计算的通道数
 uint8_t channel_count;
@@ -354,7 +354,11 @@ void ide_init(void) {
 		sema_init(&channel->disk_done, 0);
 		register_intr_handler(channel->irq_no, intr_disk_handler);
 		// 获取硬盘的参数及分区信息,目前就一个硬盘
-		while(dev_no < 1) {
+		while(dev_no < 2) {
+			if(dev_no == 0) { // 跳过主盘
+				++dev_no;
+				continue;
+			}
 			struct disk *disk = &channel->devices[dev_no];
 			disk->channel = channel;
 			disk->dev_no = dev_no;

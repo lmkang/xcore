@@ -390,6 +390,8 @@ int32_t file_write(struct file *file, const void *buf, uint32_t count) {
 	return written_bytes;
 }
 
+// 从文件file中读取count个字节写入buf,
+// 成功返回读出的字节数,若到文件尾则返回-1
 
 
 
