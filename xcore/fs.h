@@ -82,6 +82,14 @@ int32_t sys_mkdir(const char *pathname);
 
 struct directory *sys_opendir(const char *name);
 
+int32_t sys_closedir(struct directory *dir);
+
+struct dir_entry *sys_readdir(struct directory *dir);
+
+void sys_rewinddir(struct directory *dir);
+
+int32_t sys_rmdir(const char *pathname);
+
 void fs_init(void);
 
 #endif

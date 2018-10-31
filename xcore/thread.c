@@ -82,6 +82,7 @@ void init_thread(struct task_struct *pthread, char *name, uint8_t priority) {
 	pthread->ticks = priority;
 	pthread->elapsed_ticks = 0;
 	pthread->pgdir = NULL;
+	pthread->cwd_inode_nr = 0; // 以根目录作为默认的工作路径
 	pthread->stack_magic = 0x19940625; // 自定义的魔数
 	// 预留标准输入输出
 	pthread->fd_table[0] = 0;

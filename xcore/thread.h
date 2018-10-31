@@ -77,6 +77,7 @@ struct task_struct {
 	uint32_t *pgdir; // 进程的页目录虚拟地址,如果是线程则为NULL
 	struct vaddr_pool prog_vaddr; // 用户进程的虚拟地址池
 	struct mem_block_desc prog_block_descs[MEM_BLOCK_DESC_COUNT]; // 用户进程内存块描述符
+	uint32_t cwd_inode_nr; // 进程所在的工作目录的inode编号
 	uint32_t stack_magic; // 魔数,用于检测栈的溢出
 };
 

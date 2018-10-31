@@ -9,6 +9,10 @@
 #include "thread.h"
 #include "interrupt.h"
 #include "fs.h"
+#include "file.h"
+
+// 默认情况下操作的分区
+extern struct partition *cur_part;
 
 // inode位置结构体
 struct inode_position {
@@ -134,7 +138,7 @@ void inode_close(struct inode *inode) {
 }
 
 // 将硬盘分区part上的inode清空
-void inode_delete(struct partitin *part, uint32_t inode_no, void *buf) {
+void inode_delete(struct partition *part, uint32_t inode_no, void *io_buf) {
 	ASSERT(inode_no < 4096);
 	struct inode_position inode_pos;
 	inode_locate(part, inode_no, &inode_pos);

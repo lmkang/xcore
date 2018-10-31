@@ -64,7 +64,6 @@ bool search_dir_entry(struct partition *part, struct directory *dir, \
 		// 遍历扇区中所有目录项
 		while(dir_entry_index < dir_entry_count) {
 			// 找到就直接复制整个目录项
-			printk("p_dir_ent->filename : %s, name : %s\n", p_dir_ent->filename, name);
 			if(!strcmp(p_dir_ent->filename, name)) {
 				memcpy(dir_ent, p_dir_ent, dir_entry_size);
 				sys_free(buf);
@@ -236,9 +235,9 @@ bool delete_dir_entry(struct partition *part, struct directory *dir, \
 					++dir_entry_cnt;
 					// 统计此扇区内的目录项个数,用来判断删除目录项后是否回收该扇区
 					if((dir_ent + dir_entry_index)->i_no == inode_no) {
-						// 如果找到inode,就将其记录在dir_entry_found
-						ASSERT(dir_entry_found == NULL);
-						dir_entry_found = dir_ent + dir_entry_index;
+						// 如果找到inode,就将其记录在dir_ent_found
+						ASSERT(dir_ent_found == NULL);
+						dir_ent_found = dir_ent + dir_entry_index;
 					}
 				}
 			}
@@ -289,7 +288,7 @@ bool delete_dir_entry(struct partition *part, struct directory *dir, \
 				}
 			}
 		} else { // 仅将该目录项清空
-			memset(dir_entry_found, 0, dir_entry_size);
+			memset(dir_ent_found, 0, dir_entry_size);
 			ide_write(part->disk, all_blocks[block_index], io_buf, 1);
 		}
 		// 更新inode信息并同步到硬盘
@@ -303,11 +302,92 @@ bool delete_dir_entry(struct partition *part, struct directory *dir, \
 	return false;
 }
 
+// 读取目录,成功返回1个目录项,失败返回NULL
+struct dir_entry *dir_read(struct directory *dir) {
+	struct dir_entry *dir_ent = (struct dir_entry*) dir->dir_buf;
+	struct inode *dir_inode = dir->inode;
+	uint32_t all_blocks[140] = {0};
+	uint32_t block_cnt = 12;
+	uint32_t block_index = 0;
+	uint32_t dir_entry_index = 0;
+	while(block_index < 12) {
+		all_blocks[block_index] = dir_inode->sectors[block_index];
+		++block_index;
+	}
+	if(dir_inode->sectors[12] != 0) { // 有一级间接块表
+		ide_read(cur_part->disk, dir_inode->sectors[12], all_blocks + 12, 1);
+		block_cnt = 140;
+	}
+	block_index = 0;
+	uint32_t cur_dir_entry_pos = 0;
+	// 当前目录项的偏移,此项用来判断是否是之前已经返回过的目录项
+	uint32_t dir_entry_size = cur_part->sp_block->dir_entry_size;
+	// 1扇区内可容纳的目录项个数
+	uint32_t dir_entry_count = SECTOR_SIZE / dir_entry_size;
+	// 在目录大小内遍历
+	while(dir->dir_pos < dir_inode->i_size) {
+		if(dir->dir_pos >= dir_inode->i_size) {
+			return NULL;
+		}
+		if(all_blocks[block_index] == 0) {
+			// 如果此块地址为0,即空块,继续读出下一块
+			++block_index;
+			continue;
+		}
+		memset(dir_ent, 0, SECTOR_SIZE);
+		ide_read(cur_part->disk, all_blocks[block_index], dir_ent, 1);
+		dir_entry_index = 0;
+		// 遍历扇区内所有目录项
+		while(dir_entry_index < dir_entry_count) {
+			if((dir_ent + dir_entry_index)->f_type != FT_UNKNOWN) {
+				// 判断是不是最新的目录项
+				// 避免返回曾经已经返回过的目录项
+				if(cur_dir_entry_pos < dir->dir_pos) {
+					cur_dir_entry_pos += dir_entry_size;
+					++dir_entry_index;
+					continue;
+				}
+				ASSERT(cur_dir_entry_pos == dir->dir_pos);
+				// 更新为新位置,即下一个返回的目录项地址
+				dir->dir_pos += dir_entry_size;
+				return dir_ent + dir_entry_index;
+			}
+			++dir_entry_index;
+		}
+		++block_index;
+	}
+	return NULL;
+}
 
+// 判断目录是否为空
+bool dir_empty(struct directory *dir) {
+	struct inode *dir_inode = dir->inode;
+	// 若目录下只有.和..这两个目录项,则目录为空
+	return dir_inode->i_size == cur_part->sp_block->dir_entry_size * 2;
+}
 
-
-
-
+// 在父目录parent_dir中删除child_dir
+int32_t dir_remove(struct directory *parent_dir, struct directory *child_dir) {
+	struct inode *child_dir_inode = child_dir->inode;
+	// 空目录只在inode->sectors[0]中有扇区,其他扇区都应该为空
+	int32_t block_index = 1;
+	while(block_index < 13) {
+		ASSERT(child_dir_inode->sectors[block_index] == 0);
+		++block_index;
+	}
+	void *io_buf = sys_malloc(SECTOR_SIZE * 2);
+	if(io_buf == NULL) {
+		printk("dir_remove : alloc memory failed!\n");
+		return -1;
+	}
+	// 在父目录parent_dir中删除子目录child_dir对应的目录项
+	delete_dir_entry(cur_part, parent_dir, child_dir_inode->i_no, io_buf);
+	// 回收inode中sectors所占用的扇区
+	// 同步inode_btmp和block_btmp
+	inode_release(cur_part, child_dir_inode->i_no);
+	sys_free(io_buf);
+	return 0;
+}
 
 
 
