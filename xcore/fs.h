@@ -80,6 +80,8 @@ int32_t sys_unlink(const char *pathname);
 
 int32_t sys_mkdir(const char *pathname);
 
+struct directory *sys_opendir(const char *name);
+
 void fs_init(void);
 
 #endif
