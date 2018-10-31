@@ -20,6 +20,10 @@ struct inode *inode_open(struct partition *part, uint32_t inode_no);
 
 void inode_close(struct inode *inode);
 
+void inode_delete(struct partitin *part, uint32_t inode_no, void *buf);
+
+void inode_release(struct partition *part, uint32_t inode_no);
+
 void inode_init(uint32_t inode_no, struct inode *inode);
 
 #endif

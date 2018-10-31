@@ -33,4 +33,7 @@ void create_dir_entry(char *filename, uint32_t inode_no, \
 bool sync_dir_entry(struct directory *parent_dir, \
 	struct dir_entry *dir_ent, void *io_buf);
 
+bool delete_dir_entry(struct partition *part, struct directory *dir, \
+	uint32_t inode_no, void *io_buf);
+
 #endif

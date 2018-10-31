@@ -133,6 +133,82 @@ void inode_close(struct inode *inode) {
 	set_intr_status(old_status);
 }
 
+// 将硬盘分区part上的inode清空
+void inode_delete(struct partitin *part, uint32_t inode_no, void *buf) {
+	ASSERT(inode_no < 4096);
+	struct inode_position inode_pos;
+	inode_locate(part, inode_no, &inode_pos);
+	ASSERT(inode_pos.sector_lba <= (part->lba_start + part->sector_count));
+	char *inode_buf = (char*) io_buf;
+	if(inode_pos.cross_sector) { // 跨扇区
+		// 将原硬盘上的内容先读出来
+		ide_read(part->disk, inode_pos.sector_lba, inode_buf, 2);
+		// 将inode_buf清0
+		memset(inode_buf + inode_pos.sector_offset, 0, sizeof(struct inode));
+		// 用清0的内存数据覆盖磁盘
+		ide_write(part->disk, inode_pos.sector_lba, inode_buf, 2);
+	} else { // 不跨扇区
+		// 将原硬盘上的内容先读出来
+		ide_read(part->disk, inode_pos.sector_lba, inode_buf, 1);
+		// 将inode_buf清0
+		memset(inode_buf + inode_pos.sector_offset, 0, sizeof(struct inode));
+		// 用清0的内存数据覆盖磁盘
+		ide_write(part->disk, inode_pos.sector_lba, inode_buf, 1);
+	}
+}
+
+// 回收inode的数据块和inode本身
+void inode_release(struct partition *part, uint32_t inode_no) {
+	struct inode *inode_del = inode_open(part, inode_no);
+	ASSERT(inode_del->i_no == inode_no);
+	// 1 回收inode占用的所有块
+	uint8_t block_index = 0;
+	uint8_t block_count = 12;
+	uint32_t block_btmp_index;
+	uint32_t all_blocks[140] = {0}; // 12个直接块 + 128个间接块
+	// a 先将前12个直接块存入all_blocks
+	while(block_index < 12) {
+		all_blocks[block_index] = inode_del->sectors[block_index];
+		++block_index;
+	}
+	// b 如果一级间接块表存在,将其128个间接块读到all_blocks[12-],
+	// 然后释放一级间接块表所占的扇区
+	if(inode_del->sectors[12] != 0) {
+		ide_read(part->disk, inode_del->sectors[12], all_blocks + 12, 1);
+		block_count = 140;
+		// 回收一级间接块表占用的扇区
+		block_btmp_index = inode_del->sectors[12] - part->sp_block->data_lba_start;
+		ASSERT(block_btmp_index > 0);
+		set_bitmap(&part->block_btmp, block_btmp_index, 0);
+		bitmap_sync(cur_part, block_btmp_index, BLOCK_BITMAP);
+	}
+	// c inode所有的块地址已经收集到all_blocks中,下面逐个回收
+	block_index = 0;
+	while(block_index < block_count) {
+		if(all_blocks[block_index] != 0) {
+			block_btmp_index = 0;
+			block_btmp_index = all_blocks[block_index] - part->sp_block->data_lba_start;
+			ASSERT(block_btmp_index > 0);
+			set_bitmap(&part->block_btmp, block_btmp_index, 0);
+			bitmap_sync(cur_part, block_btmp_index, BLOCK_BITMAP);
+		}
+		++block_index;
+	}
+	// 2 回收该inode所占用的inode
+	set_bitmap(&part->inode_btmp, inode_no, 0);
+	bitmap_sync(cur_part, inode_no, INODE_BITMAP);
+	
+	// 以下inode_delete是调试用的
+	// 此函数会在inode_table中将此inode清0
+	// 但实际上是不需要的,inode分配是由inode位图控制的
+	// 硬盘上的数据不需要清0,可以直接覆盖
+	void *io_buf = sys_malloc(1024);
+	inode_delete(part, inode_no, io_buf);
+	sys_free(io_buf);
+	
+	inode_close(inode_del);
+}
+
 // 初始化inode
 void inode_init(uint32_t inode_no, struct inode *inode) {
 	inode->i_no = inode_no;
