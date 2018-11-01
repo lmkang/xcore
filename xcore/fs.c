@@ -470,7 +470,7 @@ int32_t sys_mkdir(const char *pathname) {
 	memset(&path_record, 0, sizeof(struct path_record));
 	int inode_no = -1;
 	inode_no = search_file(pathname, &path_record);
-	if(inode_no == -1) { // 如果找到了同名目录或文件
+	if(inode_no != -1) { // 如果找到了同名目录或文件
 		printk("sys_mkdir : file or directory %s exist!\n", pathname);
 		rollback_flag = 1;
 		goto rollback;
@@ -626,7 +626,7 @@ int32_t sys_rmdir(const char *pathname) {
 		} else {
 			struct directory *dir = dir_open(cur_part, inode_no);
 			if(!dir_empty(dir)) { // 非空目录不可删除
-				printk("directory %s si not empty!", pathname);
+				printk("directory %s is not empty!", pathname);
 			} else {
 				if(!dir_remove(path_record.parent_dir, dir)) {
 					ret_val = 0;

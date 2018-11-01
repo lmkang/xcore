@@ -89,7 +89,9 @@ void kmain(struct multiboot *mboot_ptr) {
 	//thread_start("k_thread_a", 31, k_thread_a, "A_");
 	//thread_start("k_thread_b", 8, k_thread_b, "B_");
 	
-	sys_open("/file1", FO_CREATE);
+	struct file_stat stat;
+	sys_stat("/", &stat);
+	printk("i_no : %d, size %d, f_type : %s\n", stat.i_no, stat.size, stat.f_type == 2 ? "directory" : "file");
 	
 	while(1); // 使CPU悬停在此
 	
