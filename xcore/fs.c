@@ -669,7 +669,7 @@ static int get_child_dir_name(uint32_t p_inode_nr, uint32_t c_inode_nr, \
 	}
 	// 若包含一级间接块表,将其读入all_blocks
 	if(parent_dir_inode->sectors[12] != 0) {
-		ide_read(cur_part->disk, parent_dir_inode->sectors[12], all_block + 12, 1);
+		ide_read(cur_part->disk, parent_dir_inode->sectors[12], all_blocks + 12, 1);
 		block_cnt = 140;
 	}
 	inode_close(parent_dir_inode);
@@ -711,8 +711,92 @@ char *sys_getcwd(char *buf, uint32_t size) {
 	struct task_struct *cur_thread = current_thread();
 	int32_t parent_inode_nr = 0;
 	int32_t child_inode_nr = cur_thread->cwd_inode_nr;
+	// 最大支持4096个inode
 	ASSERT(child_inode_nr >= 0 && child_inode_nr < 4096);
-	
+	// 若当前目录是根目录,直接返回
+	if(child_inode_nr == 0) {
+		buf[0] = '/';
+		buf[1] = 0;
+		return buf;
+	}
+	memset(buf, 0, size);
+	// 用来做全路径缓冲区
+	char full_path_reverse[MAX_PATH_LEN] = {0};
+	// 从下往上逐层找父目录,直到找到根目录为止
+	// 当child_inode_nr为根目录的inode编号(0)时停止
+	// 即已经查看完根目录中的目录项
+	while(child_inode_nr) {
+		parent_inode_nr = get_parent_dir_inode_nr(child_inode_nr, io_buf);
+		if(get_child_dir_name(parent_inode_nr, child_inode_nr, \
+			full_path_reverse, io_buf) == -1) {
+			sys_free(io_buf);
+			return NULL;
+		}
+		child_inode_nr = parent_inode_nr;
+	}
+	ASSERT(strlen(full_path_reverse) <= size);
+	// 至此full_path_reverse中的路径是反着的,
+	// 即子目录在前(左),父目录在后(右)
+	// 现将full_path_reverse的路径反置
+	char *last_slash; // 记录字符串中的最后一个斜杠地址
+	while((last_slash = strrchr(full_path_reverse, '/'))) {
+		uint16_t len = strlen(buf);
+		strcpy(buf + len, last_slash);
+		// 在full_path_reverse中添加结束字符,
+		// 作为下一次执行strcpy中last_slash的边界
+		*last_slash = 0;
+	}
+	sys_free(io_buf);
+	return buf;
+}
+
+// 更改当前工作目录为绝对路径path
+// 成功返回0,失败返回-1
+int32_t sys_chdir(const char *path) {
+	int32_t ret_val = -1;
+	struct path_record path_record;
+	memset(&path_record, 0, sizeof(struct path_record));
+	int inode_no = search_file(path, &path_record);
+	if(inode_no != -1) {
+		if(path_record.f_type == FT_DIRECTORY) {
+			current_thread()->cwd_inode_nr = inode_no;
+			ret_val = 0;
+		} else {
+			printk("sys_chdir : %s is a file, not a directory!\n", path);
+		}
+	}
+	dir_close(path_record.parent_dir);
+	return ret_val;
+}
+
+// 在buf中填充文件结构相关信息
+// 成功返回0,失败返回-1
+int32_t sys_stat(const char *path, struct file_stat *buf) {
+	// 若直接查看根目录'/'
+	if(!strcmp(path, "/") || !strcmp(path, "/.") || !strcmp(path, "/..")) {
+		buf->f_type = FT_DIRECTORY;
+		buf->i_no = 0;
+		buf->size = root_dir.inode->i_size;
+		return 0;
+	}
+	int32_t ret_val = -1; // 默认返回值
+	struct path_record path_record;
+	// 记得初始化或清0,否则栈中信息不知道是什么
+	memset(&path_record, 0, sizeof(struct path_record));
+	int inode_no = search_file(path, &path_record);
+	if(inode_no != -1) {
+		// 只为获得文件大小
+		struct inode *obj_inode = inode_open(cur_part, inode_no);
+		buf->size = obj_inode->i_size;
+		inode_close(obj_inode);
+		buf->f_type = path_record.f_type;
+		buf->i_no = inode_no;
+		ret_val = 0;
+	} else {
+		printk("sys_stat : %s not found!\n", path);
+	}
+	dir_close(path_record.parent_dir);
+	return ret_val;
 }
 
 // 在磁盘上搜索文件系统,若没有则格式化分区,创建文件系统

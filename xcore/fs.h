@@ -46,6 +46,13 @@ struct path_record {
 	enum file_type f_type; // 文件类型
 };
 
+// 文件属性结构体
+struct file_stat {
+	uint32_t i_no; // inode编号
+	uint32_t size; // 尺寸
+	enum file_type f_type; // 文件类型
+};
+
 // 超级块
 struct super_block {
 	uint32_t magic; // 用来标识文件系统类型
@@ -89,6 +96,12 @@ struct dir_entry *sys_readdir(struct directory *dir);
 void sys_rewinddir(struct directory *dir);
 
 int32_t sys_rmdir(const char *pathname);
+
+char *sys_getcwd(char *buf, uint32_t size);
+
+int32_t sys_chdir(const char *path);
+
+int32_t sys_stat(const char *path, struct file_stat *buf);
 
 void fs_init(void);
 
