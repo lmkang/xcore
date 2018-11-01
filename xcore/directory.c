@@ -108,7 +108,7 @@ bool sync_dir_entry(struct directory *parent_dir, \
 	uint32_t dir_size = dir_inode->i_size;
 	uint32_t dir_entry_size = cur_part->sp_block->dir_entry_size;
 	ASSERT(dir_size % dir_entry_size == 0);
-	uint32_t dir_entry_count = (512 / dir_entry_size);
+	uint32_t dir_entry_count = (SECTOR_SIZE / dir_entry_size);
 	int32_t block_lba = -1;
 	// 将该目录的所有扇区地址存入all_blocks
 	uint8_t block_index = 0;
@@ -166,7 +166,7 @@ bool sync_dir_entry(struct directory *parent_dir, \
 			}
 			// 再将新目录项p_dir_ent写入新分配的间接块
 			memset(io_buf, 0, 512);
-			memcpy(io_buf, p_dir_ent, dir_entry_size);
+			memcpy(io_buf, dir_ent, dir_entry_size);
 			ide_write(cur_part->disk, all_blocks[block_index], io_buf, 1);
 			dir_inode->i_size += dir_entry_size;
 			return true;
@@ -175,9 +175,9 @@ bool sync_dir_entry(struct directory *parent_dir, \
 		ide_read(cur_part->disk, all_blocks[block_index], io_buf, 1);
 		// 在扇区内查找空目录项
 		for(uint8_t dir_entry_index = 0; dir_entry_index < dir_entry_count; dir_entry_index++) {
-			if((dir_ent + dir_entry_index)->f_type == FT_UNKNOWN) {
+			if((p_dir_ent + dir_entry_index)->f_type == FT_UNKNOWN) {
 				// 无论是初始化或删除文件后,都将f_type置为FT_UNKNOWN
-				memcpy(dir_ent + dir_entry_index, p_dir_ent, dir_entry_size);
+				memcpy(p_dir_ent + dir_entry_index, dir_ent, dir_entry_size);
 				ide_write(cur_part->disk, all_blocks[block_index], io_buf, 1);
 				dir_inode->i_size += dir_entry_size;
 				return true;
