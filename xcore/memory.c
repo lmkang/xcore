@@ -234,15 +234,18 @@ void *kmalloc(uint32_t size, enum pool_flag pf) {
 						vp_unmap((void*) tmp_vaddr);
 						tmp_vaddr += PAGE_SIZE;
 					}
+					return NULL;
 				}
 			}
 			vp_map((void*) _vaddr, paddr, pf);
 			_vaddr += PAGE_SIZE;
 		}
+		return vaddr;
 	} else if(pf == PF_USER) {
-		get_pages(_vaddr, size);
+		return get_prog_pages(_vaddr, size);
+	} else {
+		return NULL;
 	}
-	return vaddr;
 }
 
 // 释放以虚拟地址vaddr为起始的size个页框
@@ -255,14 +258,6 @@ void kfree(void *vaddr, uint32_t size) {
 	}
 }
 
-// 在用户物理内存池中申请size个物理页,并返回虚拟地址
-void *get_user_pages(uint32_t size) {
-	lock_acquire(&user_pool.lock);
-	void *vaddr = kmalloc(size, PF_USER);
-	lock_release(&user_pool.lock);
-	return vaddr;
-}
-
 // 在内核物理内存池中申请size个物理页,并返回虚拟地址
 void *get_kernel_pages(uint32_t size) {
 	lock_acquire(&kernel_pool.lock);
@@ -271,22 +266,10 @@ void *get_kernel_pages(uint32_t size) {
 	return vaddr;
 }
 
-// 获取从虚拟地址vaddr开始的size个物理页,并返回虚拟地址
-void *get_pages(uint32_t vaddr, uint32_t size) {
-	enum pool_flag pf;
-	if(vaddr >= KERNEL_VADDR_START) {
-		pf = PF_KERNEL;
-	} else if((vaddr >= USER_VADDR_START) || (vaddr < KERNEL_OFFSET)) {
-		pf = PF_USER;
-	} else {
-		return NULL;
-	}
-	uint32_t *pgd;
-	if(current_thread()->pgdir != NULL) {
-		pgd = (uint32_t*) current_thread()->pgdir;
-	} else {
-		pgd = pgd_kern;
-	}
+// 获取进程从虚拟地址vaddr开始的size个物理页,并返回虚拟地址
+void *get_prog_pages(uint32_t vaddr, uint32_t size) {
+	ASSERT((vaddr >= USER_VADDR_START) || (vaddr < KERNEL_OFFSET));
+	uint32_t *pgd = (uint32_t*) current_thread()->pgdir;
 	uint32_t _vaddr = vaddr;
 	uint32_t pgd_index;
 	uint32_t pte_index;
@@ -300,7 +283,7 @@ void *get_pages(uint32_t vaddr, uint32_t size) {
 		lock_release(&kernel_pool.lock);
 		pgd[pgd_index] = (uint32_t) tmp_paddr | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
 		((uint32_t*) tmp_vaddr)[pte_index] = \
-			(uint32_t) get_paddr(pf) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
+			(uint32_t) get_paddr(PF_USER) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
 		// 解除tmp_vaddr和tmp_paddr的映射
 		set_bitmap(&kernel_vaddr_pool.vaddr_btmp, 
 			((uint32_t) tmp_vaddr - kernel_vaddr_pool.vaddr_start) / PAGE_SIZE, 0);

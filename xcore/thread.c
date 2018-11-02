@@ -35,6 +35,11 @@ static pid_t alloc_pid(void) {
 	return next_pid;
 }
 
+// 给fork函数使用
+pid_t fork_pid(void) {
+	return alloc_pid();
+}
+
 struct task_struct *current_thread(void) {
 	uint32_t esp;
 	__asm__ __volatile__("mov %%esp, %0" : "=g"(esp));
@@ -83,6 +88,7 @@ void init_thread(struct task_struct *pthread, char *name, uint8_t priority) {
 	pthread->elapsed_ticks = 0;
 	pthread->pgdir = NULL;
 	pthread->cwd_inode_nr = 0; // 以根目录作为默认的工作路径
+	pthread->parent_pid = -1;
 	pthread->stack_magic = 0x19940625; // 自定义的魔数
 	// 预留标准输入输出
 	pthread->fd_table[0] = 0;

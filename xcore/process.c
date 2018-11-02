@@ -35,7 +35,7 @@ void start_process(void *filename) {
 	proc_stack->eip = filename;
 	proc_stack->cs = SELECTOR_USER_CODE;
 	proc_stack->eflags = (EFLAGS_IOPL_0 | EFLAGS_MBS | EFLAGS_IF_1);
-	proc_stack->esp = (void*) ((uint32_t) get_pages(USER_STACK3_VADDR, 1) + PAGE_SIZE);
+	proc_stack->esp = (void*) ((uint32_t) get_prog_pages(USER_STACK3_VADDR, 1) + PAGE_SIZE);
 	proc_stack->ss = SELECTOR_USER_DATA;
 	__asm__ __volatile__(" \
 		movl %0, %%esp; \

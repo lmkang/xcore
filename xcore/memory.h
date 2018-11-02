@@ -41,11 +41,9 @@ void *kmalloc(uint32_t size, enum pool_flag pf);
 
 void kfree(void *vaddr, uint32_t size);
 
-void *get_user_pages(uint32_t size);
-
 void *get_kernel_pages(uint32_t size);
 
-void *get_pages(uint32_t vaddr, uint32_t size);
+void *get_prog_pages(uint32_t vaddr, uint32_t size);
 
 void *sys_malloc(uint32_t size);
 
