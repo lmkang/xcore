@@ -108,19 +108,6 @@ static void init_mem_pool(uint32_t mem_size) {
 	lock_init(&user_pool.lock);
 }
 
-// get page table address
-static uint32_t *get_pte(uint32_t vaddr) {
-	uint32_t* pte = \
-		(uint32_t*)(0xffc00000 + ((vaddr & 0xffc00000) >> 10) + GET_PTE_INDEX(vaddr) * 4);
-	return pte;
-}
-
-// get pgd address
-static uint32_t *get_pgd(uint32_t vaddr) {
-	uint32_t* pde = (uint32_t*)((0xfffff000) + GET_PGD_INDEX(vaddr) * 4);
-	return pde;
-}
-
 // kernel space virtual address to physic address
 uint32_t kern_v2p(uint32_t vaddr) {
 	uint32_t pgd_index = \
@@ -142,6 +129,8 @@ static void *get_vaddr(uint32_t page_count, enum pool_flag pf) {
 		struct task_struct *pthread = current_thread();
 		v_index = alloc_bitmap(&pthread->prog_vaddr.vaddr_btmp, page_count);
 		vaddr_start = pthread->prog_vaddr.vaddr_start;
+		// USER_STACK3_VADDR是用户3级栈,已经被分配了
+		ASSERT((vaddr_start + v_index * PAGE_SIZE) < USER_STACK3_VADDR);
 	} else {
 		return NULL;
 	}
@@ -268,7 +257,7 @@ void *get_kernel_pages(uint32_t size) {
 void *get_prog_pages(uint32_t vaddr, uint32_t size) {
 	ASSERT((vaddr >= USER_VADDR_START) || (vaddr < KERNEL_OFFSET));
 	//uint32_t *pgd = (uint32_t*) current_thread()->pgdir;
-	uint32_t *pgd = get_pgd(vaddr);
+	uint32_t *pgd = (uint32_t*)((0xfffff000) + GET_PGD_INDEX(vaddr) * 4);
 	uint32_t _vaddr = vaddr;
 	uint32_t pgd_index;
 	uint32_t pte_index;
