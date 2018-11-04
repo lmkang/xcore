@@ -108,6 +108,19 @@ static void init_mem_pool(uint32_t mem_size) {
 	lock_init(&user_pool.lock);
 }
 
+// get page table address
+static uint32_t *get_pte(uint32_t vaddr) {
+	uint32_t* pte = \
+		(uint32_t*)(0xffc00000 + ((vaddr & 0xffc00000) >> 10) + GET_PTE_INDEX(vaddr) * 4);
+	return pte;
+}
+
+// get pgd address
+static uint32_t *get_pgd(uint32_t vaddr) {
+	uint32_t* pde = (uint32_t*)((0xfffff000) + GET_PGD_INDEX(vaddr) * 4);
+	return pde;
+}
+
 // kernel space virtual address to physic address
 uint32_t kern_v2p(uint32_t vaddr) {
 	uint32_t pgd_index = \
@@ -162,15 +175,12 @@ static void vp_map(void *vaddr, void *paddr, enum pool_flag pf) {
 	ASSERT((pf == PF_KERNEL) || (pf == PF_USER));
 	uint32_t _vaddr = (uint32_t) vaddr;
 	uint32_t _paddr = (uint32_t) paddr;
-	if(pf == PF_KERNEL) {
-		_paddr |= (PAGE_P_1 | PAGE_RW_W);
-	} else if(pf == PF_USER) {
-		_paddr |= (PAGE_US_U | PAGE_P_1 | PAGE_RW_W);
-	}
 	uint32_t pgd_index;
 	if(pf == PF_KERNEL) {
+		_paddr |= (PAGE_P_1 | PAGE_RW_W);
 		pgd_index = GET_PGD_INDEX(_vaddr) - GET_PGD_INDEX(KERNEL_OFFSET);
 	} else if(pf == PF_USER) {
+		_paddr |= (PAGE_US_U | PAGE_P_1 | PAGE_RW_W);
 		pgd_index = GET_PGD_INDEX(_vaddr) + 256;
 	}
 	uint32_t pte_index = GET_PTE_INDEX(_vaddr);
@@ -184,29 +194,17 @@ static void vp_unmap(void *vaddr) {
 	uint32_t v_index = (_vaddr - kernel_vaddr_pool.vaddr_start) / PAGE_SIZE;
 	set_bitmap(&kernel_vaddr_pool.vaddr_btmp, v_index, 0);
 	struct memory_pool *mem_pool;
-	enum pool_flag pf;
+	uint32_t pgd_index;
 	if(_vaddr >= KERNEL_VADDR_START) {
 		mem_pool = &kernel_pool;
-		pf = PF_KERNEL;
+		pgd_index = GET_PGD_INDEX(_vaddr) - GET_PGD_INDEX(KERNEL_OFFSET);
 	} else if((_vaddr >= USER_VADDR_START) || (_vaddr < KERNEL_OFFSET)) {
 		mem_pool = &user_pool;
-		pf = PF_USER;
-	}
-	ASSERT((pf == PF_KERNEL) || (pf == PF_USER));
-	uint32_t pgd_index;
-	if(pf == PF_KERNEL) {
-		pgd_index = GET_PGD_INDEX(_vaddr) - GET_PGD_INDEX(KERNEL_OFFSET);
-	} else if(pf == PF_USER) {
 		pgd_index = GET_PGD_INDEX(_vaddr) + 256;
 	}
 	uint32_t pte_index = GET_PTE_INDEX(_vaddr);
 	uint32_t p_index = (pte_kern[pgd_index][pte_index] - mem_pool->paddr_start) / PAGE_SIZE;
 	set_bitmap(&mem_pool->pool_btmp, p_index, 0);
-	if(pf == PF_KERNEL) {
-		pgd_index = GET_PGD_INDEX(_vaddr) - GET_PGD_INDEX(KERNEL_OFFSET);
-	} else if(pf == PF_USER) {
-		pgd_index = GET_PGD_INDEX(_vaddr) + 256;
-	}
 	pte_index = GET_PTE_INDEX(_vaddr);
 	pte_kern[pgd_index][pte_index] &= ~(PAGE_P_1);
 	// 清除TLB缓存
@@ -269,7 +267,8 @@ void *get_kernel_pages(uint32_t size) {
 // 获取进程从虚拟地址vaddr开始的size个物理页,并返回虚拟地址
 void *get_prog_pages(uint32_t vaddr, uint32_t size) {
 	ASSERT((vaddr >= USER_VADDR_START) || (vaddr < KERNEL_OFFSET));
-	uint32_t *pgd = (uint32_t*) current_thread()->pgdir;
+	//uint32_t *pgd = (uint32_t*) current_thread()->pgdir;
+	uint32_t *pgd = get_pgd(vaddr);
 	uint32_t _vaddr = vaddr;
 	uint32_t pgd_index;
 	uint32_t pte_index;
@@ -281,7 +280,8 @@ void *get_prog_pages(uint32_t vaddr, uint32_t size) {
 		void *tmp_paddr = get_paddr(PF_KERNEL);
 		vp_map(tmp_vaddr, tmp_paddr, PF_KERNEL);
 		lock_release(&kernel_pool.lock);
-		pgd[pgd_index] = (uint32_t) tmp_paddr | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
+		//pgd[pgd_index] = (uint32_t) tmp_paddr | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
+		*pgd = (uint32_t) tmp_paddr | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
 		((uint32_t*) tmp_vaddr)[pte_index] = \
 			(uint32_t) get_paddr(PF_USER) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
 		// 解除tmp_vaddr和tmp_paddr的映射
