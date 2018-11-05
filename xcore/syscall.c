@@ -5,6 +5,7 @@
 #include "string.h"
 #include "memory.h"
 #include "fs.h"
+#include "fork.h"
 
 #define SYSCALL_COUNT 32
 
@@ -69,6 +70,7 @@ void syscall_init(void) {
 	syscall_table[SYS_WRITE] = sys_write;
 	syscall_table[SYS_MALLOC] = sys_malloc;
 	syscall_table[SYS_FREE] = sys_free;
+	syscall_table[SYS_FORK] = sys_fork;
 	
 	printk("syscall_init done\n");
 }
@@ -95,7 +97,10 @@ void free(void *ptr) {
 	_syscall1(SYS_FREE, ptr);
 }
 
-
+// fork
+pid_t fork(void) {
+	return _syscall0(SYS_FORK);
+}
 
 
 

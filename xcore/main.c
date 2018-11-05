@@ -19,6 +19,7 @@ extern struct multiboot *glb_mboot_ptr;
 
 void kmain(struct multiboot *mboot_ptr);
 void get_total_mem(struct multiboot *mboot_ptr);
+void init(void);
 
 // 内核栈
 uint8_t kern_stack[STACK_SIZE];
@@ -103,6 +104,17 @@ void get_total_mem(struct multiboot *mboot_ptr) {
 	if (CHECK_FLAG(mboot_ptr->flags, 0)) {
         *mem_size_addr = mboot_ptr->mem_lower * 1024 + mboot_ptr->mem_upper * 1024 + 1024 * 1024;
     }
+}
+
+// init进程
+void init(void) {
+	uint32_t ret_pid = fork();
+	if(ret_pid) {
+		printf("I am father, my pid is %d, child pid is %d\n", getpid(), ret_pid);
+	} else {
+		printf("I am child, my pid is %d, ret pid is %d\n", getpid(), ret_pid);
+	}
+	while(1);
 }
 
 void k_thread_a(void *arg) {

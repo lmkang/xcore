@@ -16,6 +16,7 @@ static struct list_ele *thread_tag; // 用于保存队列中的线程节点
 struct lock pid_lock; // pid锁
 
 extern void switch_to(struct task_struct *cur_task, struct task_struct *next_task);
+extern void init(void);
 
 // 系统空闲时运行的线程
 static void idle(__attribute__((unused)) void *arg) {
@@ -205,6 +206,9 @@ void thread_init(void) {
 	list_init(&thread_ready_list);
 	list_init(&thread_all_list);
 	lock_init(&pid_lock);
+	// 先创建第一个用户进程: init,pid为1
+	process_execute(init, "init");
+	// 将当前main函数创建为线程
 	create_main_thread();
 	idle_thread = thread_start("idle", 10, idle, NULL);
 	printk("thread_init done\n");

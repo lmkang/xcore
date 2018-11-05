@@ -45,6 +45,8 @@ void *get_kernel_pages(uint32_t size);
 
 void *get_prog_pages(uint32_t vaddr, uint32_t size);
 
+void *get_page_without_btmp(uint32_t vaddr);
+
 void *sys_malloc(uint32_t size);
 
 void sys_free(void *ptr);

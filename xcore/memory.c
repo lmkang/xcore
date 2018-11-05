@@ -256,12 +256,15 @@ void *get_kernel_pages(uint32_t size) {
 // 获取进程从虚拟地址vaddr开始的size个物理页,并返回虚拟地址
 void *get_prog_pages(uint32_t vaddr, uint32_t size) {
 	ASSERT((vaddr >= USER_VADDR_START) || (vaddr < KERNEL_OFFSET));
-	//uint32_t *pgd = (uint32_t*) current_thread()->pgdir;
-	uint32_t *pgd = (uint32_t*)((0xfffff000) + GET_PGD_INDEX(vaddr) * 4);
+	struct task_struct *cur_thread = current_thread();
+	uint32_t *pgd = (uint32_t*) cur_thread->pgdir;
 	uint32_t _vaddr = vaddr;
 	uint32_t pgd_index;
 	uint32_t pte_index;
 	while(size-- > 0) {
+		// 设置进程虚拟位图
+		set_bitmap(&cur_thread->prog_vaddr.vaddr_btmp, \
+			(_vaddr - cur_thread->prog_vaddr.vaddr_start) / PAGE_SIZE, 1);
 		pgd_index = GET_PGD_INDEX(_vaddr);
 		pte_index = GET_PTE_INDEX(_vaddr);
 		lock_acquire(&kernel_pool.lock);
@@ -269,8 +272,7 @@ void *get_prog_pages(uint32_t vaddr, uint32_t size) {
 		void *tmp_paddr = get_paddr(PF_KERNEL);
 		vp_map(tmp_vaddr, tmp_paddr, PF_KERNEL);
 		lock_release(&kernel_pool.lock);
-		//pgd[pgd_index] = (uint32_t) tmp_paddr | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
-		*pgd = (uint32_t) tmp_paddr | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
+		pgd[pgd_index] = (uint32_t) tmp_paddr | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
 		((uint32_t*) tmp_vaddr)[pte_index] = \
 			(uint32_t) get_paddr(PF_USER) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
 		// 解除tmp_vaddr和tmp_paddr的映射
@@ -284,6 +286,26 @@ void *get_prog_pages(uint32_t vaddr, uint32_t size) {
 		_vaddr += PAGE_SIZE;
 	}
 	return (void*) vaddr;
+}
+
+// 获取进程虚拟地址vaddr的一个物理页,但不修改虚拟位图
+void *get_page_without_btmp(uint32_t vaddr) {
+	ASSERT((vaddr >= USER_VADDR_START) || (vaddr < KERNEL_OFFSET));
+	uint32_t *pgd = (uint32_t*)((0xfffff000) + GET_PGD_INDEX(vaddr) * 4);
+	lock_acquire(&kernel_pool.lock);
+	void *tmp_vaddr = get_vaddr(1, PF_KERNEL);
+	void *tmp_paddr = get_paddr(PF_KERNEL);
+	vp_map(tmp_vaddr, tmp_paddr, PF_KERNEL);
+	lock_release(&kernel_pool.lock);
+	*pgd = (uint32_t) tmp_paddr | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
+	((uint32_t*) tmp_vaddr)[GET_PTE_INDEX(vaddr)] = \
+		(uint32_t) get_paddr(PF_USER) | PAGE_US_U | PAGE_P_1 | PAGE_RW_W;
+	// 解除tmp_vaddr和tmp_paddr的映射
+	set_bitmap(&kernel_vaddr_pool.vaddr_btmp, 
+		((uint32_t) tmp_vaddr - kernel_vaddr_pool.vaddr_start) / PAGE_SIZE, 0);
+	// 清除TLB缓存
+	__asm__ __volatile__("invlpg (%0)" : : "r"((uint32_t) tmp_vaddr) : "memory");
+	return vaddr;
 }
 
 // 初始化内存块描述符
