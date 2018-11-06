@@ -7,6 +7,8 @@
 #include "print.h"
 #include "process.h"
 #include "sync.h"
+#include "stdio.h"
+#include "fs.h"
 
 struct task_struct *main_thread; // 主线程
 struct task_struct *idle_thread; // idle线程
@@ -201,6 +203,74 @@ void thread_yield(void) {
 	set_intr_status(old_status);
 }
 
+// 以填充空格的方式输出buf
+static void print_pad(char *buf, int32_t len, void *ptr, char format) {
+	memset(buf, 0, len);
+	uint8_t index = 0;
+	switch(format) {
+		case 's':
+			index = sprintf(buf, "%s", ptr);
+			break;
+		case 'd':
+			index = sprintf(buf, "%d", *((int16_t*) ptr));
+		case 'x':
+			index = sprintf(buf, "%x", *((uint32_t*) ptr));
+			break;
+	}
+	while(index < len) { // 以空格填充
+		buf[index] = ' ';
+		++index;
+	}
+	sys_write(STDOUT_FD, buf, len - 1);
+}
+
+// 用于在list_traversal函数中的回调函数,用于针对线程队列的处理
+static bool ele2thread_info(struct list_ele *ele, __attribute__((unused))int arg) {
+	struct task_struct *pthread = ELE2ENTRY(struct task_struct, all_list_tag, ele);
+	char out_pad[16] = {0};
+	print_pad(out_pad, 16, &pthread->pid, 'd');
+	if(pthread->parent_pid == -1) {
+		print_pad(out_pad, 16, "NULL", 's');
+	} else {
+		print_pad(out_pad, 16, &pthread->parent_pid, 'd');
+	}
+	switch(pthread->status) {
+		case 0:
+			print_pad(out_pad, 16, "RUNNING", 's');
+			break;
+		case 1:
+			print_pad(out_pad, 16, "READY", 's');
+			break;
+		case 2:
+			print_pad(out_pad, 16, "BLOCKED", 's');
+			break;
+		case 3:
+			print_pad(out_pad, 16, "WAITING", 's');
+			break;
+		case 4:
+			print_pad(out_pad, 16, "HANGING", 's');
+			break;
+		case 5:
+			print_pad(out_pad, 16, "DIED", 's');
+			break;
+	}
+	print_pad(out_pad, 16, &pthread->elapsed_ticks, 'x');
+	memset(out_pad, 0, 16);
+	ASSERT(strlen(pthread->name) <= 16);
+	memcpy(out_pad, pthread->name, strlen(pthread->name));
+	strcat(out_pad, "\n");
+	sys_write(STDOUT_FD, out_pad, strlen(out_pad));
+	// 此处返回false是为了让list_traversal函数继续往下遍历
+	return false;
+}
+
+// 打印任务列表
+void sys_ps(void) {
+	char *ps_title = "PID      PPID      STAT      TICKS      COMMAND\n";
+	sys_write(STDOUT_FD, ps_title, strlen(ps_title));
+	list_traversal(&thread_all_list, ele2thread_info, 0);
+}
+
 // 初始化线程环境
 void thread_init(void) {
 	list_init(&thread_ready_list);
@@ -213,54 +283,3 @@ void thread_init(void) {
 	idle_thread = thread_start("idle", 10, idle, NULL);
 	printk("thread_init done\n");
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

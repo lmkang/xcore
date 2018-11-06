@@ -3,18 +3,23 @@
 #include "string.h"
 #include "file.h"
 
-// 最大支持键入128个字符的命令行输入
-#define CMD_LEN 128
-
 // 加上命令名外,最多支持15个参数
 #define MAX_ARG_COUNT 16
 
 // 存储输入的命令
-static char cmd_line[CMD_LEN] = {0};
+static char cmd_line[MAX_PATH_LEN] = {0};
 
 // 用来记录当前目录,是当前目录的缓存,
 // 每次执行cd命令时会更新此内容
-char cwd_cache[64] = {0};
+char cwd_cache[MAX_PATH_LEN] = {0};
+
+// 为了给exec的程序访问参数
+char *argv[MAX_ARG_COUNT];
+
+int32_t argc = -1;
+
+// 用于洗路径
+char final_path[MAX_PATH_LEN] = {0};
 
 // 输入提示符
 void print_prompt(void) {
@@ -65,17 +70,71 @@ static void readline(char *buf, int32_t count) {
 	printf("readline: can not find enter key in the cmd line, max number of char is 128!\n");
 }
 
+// 解析字符串cmd_str中以token为分隔符的单词,
+// 并将各单词的指针存入argv数组
+static int32_t parse_cmd(char *cmd_str, char **argv, char token) {
+	int32_t arg_index = 0;
+	while(arg_index < MAX_ARG_COUNT) {
+		argv[arg_index] = NULL;
+		++arg_index;
+	}
+	char *next = cmd_str;
+	int32_t argc = 0;
+	// 外层循环处理整个命令行
+	while(*next) {
+		// 去除命令字或参数之间的空格
+		while(*next == token) {
+			++next;
+		}
+		// 处理最后一个参数后接空格的情况
+		if(*next == 0) {
+			break;
+		}
+		argv[argc] = next;
+		// 内层循环处理命令行中的每个命令字和参数
+		while(*next && *next != token) { // 在字符串结束前找单词分隔符
+			++next;
+		}
+		// 如果未结束(token字符),使token变成0
+		if(*next) {
+			// 将token字符替换为字符串结束符0,
+			// 作为一个单词的结束,并将字符指针next指向下一个字符
+			*next++ = 0;
+		}
+		// 避免argv数组访问越界,参数过多则返回0
+		if(argc > MAX_ARG_COUNT) {
+			return -1;
+		}
+		++argc;
+	}
+	return argc;
+}
+
 // 简单的shell
 void simple_shell(void) {
 	cwd_cache[0] = '/';
 	while(1) {
 		print_prompt();
-		memset(cmd_line, 0, CMD_LEN);
-		readline(cmd_line, CMD_LEN);
+		memset(final_path, 0, MAX_PATH_LEN);
+		memset(cmd_line, 0, MAX_PATH_LEN);
+		readline(cmd_line, MAX_PATH_LEN);
 		if(cmd_line[0] == 0) { // 若只键入一个回车
 			continue;
 		}
+		argc = -1;
+		argc = parse_cmd(cmd_line, argv, ' ');
+		if(argc == -1) {
+			printf("number of arg exceed %d\n", MAX_ARG_COUNT);
+			continue;
+		}
+		int32_t arg_index = 0;
+		while(arg_index < argc) {
+			printf("%s ", argv[arg_index]);
+			++arg_index;
+		}
+		printf("\n");
 	}
+	printf("simple_shell error!\n");
 }
 
 

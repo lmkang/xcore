@@ -85,7 +85,7 @@ void kmain(struct multiboot *mboot_ptr) {
 	//process_execute(u_prog_a, "u_prog_a");
 	//process_execute(u_prog_b, "u_prog_b");
 	
-	//enable_intr();
+	enable_intr();
 	
 	//console_printk("main_pid : %x\n", sys_getpid());
 	
@@ -96,8 +96,8 @@ void kmain(struct multiboot *mboot_ptr) {
 	//sys_stat("/", &stat);
 	//printk("i_no : %d, size %d, f_type : %s\n", stat.i_no, stat.size, stat.f_type == 2 ? "directory" : "file");
 	
-	//clear();
-	//print_prompt();
+	clear();
+	print_prompt();
 	
 	while(1); // 使CPU悬停在此
 	
