@@ -7,6 +7,8 @@
 #include "debug.h"
 #include "directory.h"
 #include "file.h"
+#include "ioqueue.h"
+#include "keyboard.h"
 
 // 按硬盘数计算的通道数
 extern uint8_t channel_count;
@@ -369,13 +371,25 @@ int32_t sys_write(int32_t fd, const void *buf, uint32_t count) {
 // 从文件描述符fd指向的文件中读取count个字节到buf,
 // 成功返回读出的字节数,若到文件尾返回-1
 int32_t sys_read(int32_t fd, void *buf, uint32_t count) {
-	if(fd < 0) {
-		printk("sys_read : fd error!\n");
-		return -1;
-	}
 	ASSERT(buf != NULL);
-	uint32_t global_fd = fd_local2global(fd);
-	return file_read(&file_table[global_fd], buf, count);
+	int32_t ret_val = -1;
+	if(fd < 0 || fd == STDOUT_FD || fd == STDERR_FD) {
+		printk("sys_read : fd error!\n");
+		ret_val = -1;
+	} else if(fd == STDIN_FD) {
+		char *buffer = buf;
+		uint32_t read_bytes = 0;
+		while(read_bytes < count) {
+			*buffer = ioq_getchar(&kbd_buf);
+			++read_bytes;
+			++buffer;
+		}
+		ret_val = (read_bytes == 0 ? -1 : (int32_t) read_bytes);
+	} else {
+		uint32_t global_fd = fd_local2global(fd);
+		ret_val = file_read(&file_table[global_fd], buf, count);
+	}
+	return ret_val;
 }
 
 // 重置用于文件读写的偏移指针

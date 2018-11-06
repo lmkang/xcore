@@ -166,9 +166,16 @@ static void intr_keyboard_handler(void) {
 		char cur_char = keymap[index][shift]; // 在数组中找到对应的字符
 		// 只处理ASCII码不为0的键
 		if(cur_char) {
+			// 快捷键ctrl+l和ctrl+u的处理
+			// 下面是把ctrl+l和ctrl+u这两种组合键产生的字符置为:
+			// cur_char的asc码-字符a的asc码, 此差值比较小,
+			// 属于ascii码表中不可见的字符部分.故不会产生可见字符
+			// 我们在shell中将ascii值为l-a和u-a的分别处理为清屏和删除输入的快捷键
+			if ((ctrl_down_last && cur_char == 'l') || (ctrl_down_last && cur_char == 'u')) {
+				cur_char -= 'a';
+			}
 			// 若kbd_buf中未满并且待加入的cur_char不为0,则将其加入kbd_buf
 			if(!ioq_full(&kbd_buf)) {
-				put_char(cur_char); // 临时的
 				ioq_putchar(&kbd_buf, cur_char);
 			}
 			return;

@@ -17,6 +17,8 @@ uint32_t printk(const char *format, ...);
 
 void console_init();
 
+void console_put_char(char ch);
+
 void console_put_str(char *str);
 
 uint32_t console_printk(const char *format, ...);

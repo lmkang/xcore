@@ -12,6 +12,8 @@
 #include "syscall.h"
 #include "stdio.h"
 #include "fs.h"
+#include "shell.h"
+#include "file.h"
 
 #define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
 
@@ -80,19 +82,22 @@ void kmain(struct multiboot *mboot_ptr) {
 	// 打印总物理内存容量
 	printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_PADDR)) / (1024 * 1024));
 	
-	process_execute(u_prog_a, "u_prog_a");
-	process_execute(u_prog_b, "u_prog_b");
+	//process_execute(u_prog_a, "u_prog_a");
+	//process_execute(u_prog_b, "u_prog_b");
 	
-	enable_intr();
+	//enable_intr();
 	
-	console_printk("main_pid : %x\n", sys_getpid());
+	//console_printk("main_pid : %x\n", sys_getpid());
 	
-	thread_start("k_thread_a", 31, k_thread_a, "A_");
-	thread_start("k_thread_b", 8, k_thread_b, "B_");
+	//thread_start("k_thread_a", 31, k_thread_a, "A_");
+	//thread_start("k_thread_b", 8, k_thread_b, "B_");
 	
 	//struct file_stat stat;
 	//sys_stat("/", &stat);
 	//printk("i_no : %d, size %d, f_type : %s\n", stat.i_no, stat.size, stat.f_type == 2 ? "directory" : "file");
+	
+	//clear();
+	//print_prompt();
 	
 	while(1); // 使CPU悬停在此
 	
@@ -109,12 +114,11 @@ void get_total_mem(struct multiboot *mboot_ptr) {
 // init进程
 void init(void) {
 	uint32_t ret_pid = fork();
-	if(ret_pid) {
-		printf("I am father, my pid is %d, child pid is %d\n", getpid(), ret_pid);
-	} else {
-		printf("I am child, my pid is %d, ret pid is %d\n", getpid(), ret_pid);
+	if(ret_pid) { // 父进程
+		while(1);
+	} else { // 子进程
+		simple_shell();
 	}
-	while(1);
 }
 
 void k_thread_a(void *arg) {

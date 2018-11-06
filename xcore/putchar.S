@@ -107,3 +107,34 @@ put_char:
 	;恢复环境,返回
 	popad
 	ret
+
+;清屏
+global sys_clear:
+sys_clear:
+	pushad
+	mov ax, 0x18
+	mov gs, ax
+	mov ebx, 0
+	mov ecx, 2000
+.clear:
+	mov word [gs:ebx], 0x0720 ;黑底白字的空格
+	add ebx, 2
+	loop .clear
+	mov ebx, 0
+.set_cursor:
+	;先设置高8位
+	mov dx, 0x03d4 ;索引寄存器
+	mov al, 0x0e ;光标位置的高8位
+	out dx, al
+	mov dx, 0x03d5 ;获取或设置光标位置
+	mov al, bh
+	out dx, al
+	;再设置低8位
+	mov dx, 0x03d4
+	mov al, 0x0f
+	out dx, al
+	mov dx, 0x03d5
+	mov al, bl
+	out dx, al
+	popad
+	ret

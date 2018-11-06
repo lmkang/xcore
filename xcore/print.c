@@ -76,6 +76,13 @@ void console_init() {
 	lock_init(&console_lock);
 }
 
+// 终端输出字符
+void console_put_char(char ch) {
+	lock_acquire(&console_lock);
+	put_char(ch);
+	lock_release(&console_lock);
+}
+
 // 终端输出字符串
 void console_put_str(char *str) {
 	lock_acquire(&console_lock);

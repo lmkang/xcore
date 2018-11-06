@@ -8,7 +8,10 @@ enum SYSCALL_NR {
 	SYS_WRITE,
 	SYS_MALLOC,
 	SYS_FREE,
-	SYS_FORK
+	SYS_FORK,
+	SYS_READ,
+	SYS_PUTCHAR,
+	SYS_CLEAR
 };
 
 // ----- user call ----------
@@ -20,6 +23,12 @@ uint32_t write(int32_t fd, const void *buf, uint32_t count);
 void *malloc(uint32_t size);
 
 void free(void *ptr);
+
+int32_t read(int32_t fd, void *buf, uint32_t count);
+
+void putchar(char ch);
+
+void clear(void);
 
 // ----- kernel call --------
 

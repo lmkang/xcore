@@ -11,6 +11,9 @@
 
 void *syscall_table[SYSCALL_COUNT];
 
+// 清屏
+extern void sys_clear(void);
+
 // 无参数的系统调用
 #define _syscall0(NUMBER) ({ \
 	int value; \
@@ -71,6 +74,9 @@ void syscall_init(void) {
 	syscall_table[SYS_MALLOC] = sys_malloc;
 	syscall_table[SYS_FREE] = sys_free;
 	syscall_table[SYS_FORK] = sys_fork;
+	syscall_table[SYS_READ] = sys_read;
+	syscall_table[SYS_PUTCHAR] = console_put_char;
+	syscall_table[SYS_CLEAR] = sys_clear;
 	
 	printk("syscall_init done\n");
 }
@@ -102,11 +108,20 @@ pid_t fork(void) {
 	return _syscall0(SYS_FORK);
 }
 
+// 从文件描述符fd中读取count个字节到buf
+int32_t read(int32_t fd, void *buf, uint32_t count) {
+	return _syscall3(SYS_READ, fd, buf, count);
+}
 
+// 终端输出一个字符
+void putchar(char ch) {
+	_syscall1(SYS_PUTCHAR, ch);
+}
 
-
-
-
+// 清屏
+void clear(void) {
+	_syscall0(SYS_CLEAR);
+}
 
 
 
