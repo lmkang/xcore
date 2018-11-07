@@ -14,7 +14,8 @@ OBJS = $(BUILD_DIR)/boot.o $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o \
 	$(BUILD_DIR)/list.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/keyboard.o \
 	$(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o \
 	$(BUILD_DIR)/stdio.o $(BUILD_DIR)/ide.o $(BUILD_DIR)/fs.o $(BUILD_DIR)/inode.o \
-	$(BUILD_DIR)/file.o $(BUILD_DIR)/directory.o $(BUILD_DIR)/fork.o $(BUILD_DIR)/shell.o
+	$(BUILD_DIR)/file.o $(BUILD_DIR)/directory.o $(BUILD_DIR)/fork.o \
+	$(BUILD_DIR)/shell.o $(BUILD_DIR)/command.o
 TARGET_NAME = kernel
 
 $(BUILD_DIR)/%.o : %.c

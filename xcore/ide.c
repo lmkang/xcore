@@ -39,7 +39,7 @@
 #define CMD_WRITE_SECTOR 0x30 // 写扇区指令
 
 // 定义可读写的最大扇区数,调试用的
-#define MAX_LBA (10 * 1024 * 1024 / 512 - 1) // 只支持80MB硬盘
+#define MAX_LBA (10 * 1024 * 1024 / 512 - 1) // 只支持10MB硬盘
 
 // 按硬盘数计算的通道数
 uint8_t channel_count;

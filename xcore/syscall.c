@@ -149,7 +149,7 @@ int32_t open(char *pathname, uint8_t flag) {
 
 // 关闭文件fd
 int32_t close(int32_t fd) {
-	return _syscall(SYS_CLOSE, fd);
+	return _syscall1(SYS_CLOSE, fd);
 }
 
 // 设置文件偏移量
@@ -193,7 +193,7 @@ void rewinddir(struct directory *dir) {
 }
 
 // 获取path属性到buf中
-int32_t stat(const char *path, struct stat *buf) {
+int32_t stat(const char *path, struct file_stat *buf) {
 	return _syscall2(SYS_STAT, path, buf);
 }
 

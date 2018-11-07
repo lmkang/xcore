@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "file.h"
+#include "command.h"
 
 // 加上命令名外,最多支持15个参数
 #define MAX_ARG_COUNT 16
@@ -18,7 +19,7 @@ char *argv[MAX_ARG_COUNT];
 
 int32_t argc = -1;
 
-// 用于洗路径
+// 最终路径
 char final_path[MAX_PATH_LEN] = {0};
 
 // 输入提示符
@@ -127,12 +128,28 @@ void simple_shell(void) {
 			printf("number of arg exceed %d\n", MAX_ARG_COUNT);
 			continue;
 		}
-		int32_t arg_index = 0;
-		while(arg_index < argc) {
-			printf("%s ", argv[arg_index]);
-			++arg_index;
+		if(!strcmp("ls", argv[0])) {
+			cmd_ls(argc, argv);
+		} else if(!strcmp("cd", argv[0])) {
+			if(cmd_cd(argc, argv) != NULL) {
+				memset(cwd_cache, 0, MAX_PATH_LEN);
+				strcpy(cwd_cache, final_path);
+			}
+		} else if(!strcmp("pwd", argv[0])) {
+			cmd_pwd(argc, argv);
+		} else if(!strcmp("ps", argv[0])) {
+			cmd_ps(argc, argv);
+		} else if(!strcmp("clear", argv[0])) {
+			cmd_clear(argc, argv);
+		} else if(!strcmp("mkdir", argv[0])) {
+			cmd_mkdir(argc, argv);
+		} else if(!strcmp("rmdir", argv[0])) {
+			cmd_rmdir(argc, argv);
+		} else if(!strcmp("rm", argv[0])) {
+			cmd_rm(argc, argv);
+		} else {
+			printf("unknown command\n");
 		}
-		printf("\n");
 	}
 	printf("simple_shell error!\n");
 }

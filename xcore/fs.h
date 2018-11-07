@@ -71,6 +71,8 @@ struct super_block {
 	uint8_t pad[460]; // 加上460字节,凑够512字节1扇区大小
 }__attribute__((packed));
 
+char *parse_path(char *pathname, char *name_store);
+
 int32_t get_path_depth(char *pathname);
 
 int32_t sys_open(const char *pathname, enum file_option f_opt);

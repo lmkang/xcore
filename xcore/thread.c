@@ -9,6 +9,7 @@
 #include "sync.h"
 #include "stdio.h"
 #include "fs.h"
+#include "file.h"
 
 struct task_struct *main_thread; // 主线程
 struct task_struct *idle_thread; // idle线程
