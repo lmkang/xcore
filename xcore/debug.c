@@ -7,7 +7,7 @@ void panic_spin(char *filename, int line, const char *func, const char *conditio
 	put_str("\n!!!error!!!\n");
 	put_str("filename: ");
 	put_str(filename);
-	put_str("\nline: 0x");
+	put_str("\nline: ");
 	put_hex(line);
 	put_str("\nfunction: ");
 	put_str((char *) func);

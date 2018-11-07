@@ -267,7 +267,7 @@ static bool ele2thread_info(struct list_ele *ele, __attribute__((unused))int arg
 
 // 打印任务列表
 void sys_ps(void) {
-	char *ps_title = "PID      PPID      STAT      TICKS      COMMAND\n";
+	char *ps_title = "PID            PPID           STAT           TICKS          COMMAND\n";
 	sys_write(STDOUT_FD, ps_title, strlen(ps_title));
 	list_traversal(&thread_all_list, ele2thread_info, 0);
 }
