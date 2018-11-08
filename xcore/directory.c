@@ -293,7 +293,7 @@ bool delete_dir_entry(struct partition *part, struct directory *dir, \
 		}
 		// 更新inode信息并同步到硬盘
 		ASSERT(dir_inode->i_size >= dir_entry_size);
-		dir_inode->i_size = dir_entry_size;
+		dir_inode->i_size -= dir_entry_size;
 		memset(io_buf, 0, SECTOR_SIZE * 2);
 		inode_sync(part, dir_inode, io_buf);
 		return true;
@@ -307,7 +307,7 @@ struct dir_entry *dir_read(struct directory *dir) {
 	struct dir_entry *dir_ent = (struct dir_entry*) dir->dir_buf;
 	struct inode *dir_inode = dir->inode;
 	uint32_t all_blocks[140] = {0};
-	uint32_t block_cnt = 12;
+	uint32_t block_count = 12;
 	uint32_t block_index = 0;
 	uint32_t dir_entry_index = 0;
 	while(block_index < 12) {
@@ -316,7 +316,7 @@ struct dir_entry *dir_read(struct directory *dir) {
 	}
 	if(dir_inode->sectors[12] != 0) { // 有一级间接块表
 		ide_read(cur_part->disk, dir_inode->sectors[12], all_blocks + 12, 1);
-		block_cnt = 140;
+		block_count = 140;
 	}
 	block_index = 0;
 	uint32_t cur_dir_entry_pos = 0;
@@ -325,7 +325,7 @@ struct dir_entry *dir_read(struct directory *dir) {
 	// 1扇区内可容纳的目录项个数
 	uint32_t dir_entry_count = SECTOR_SIZE / dir_entry_size;
 	// 在目录大小内遍历
-	while(dir->dir_pos < dir_inode->i_size) {
+	while(block_index < block_count) {
 		if(dir->dir_pos >= dir_inode->i_size) {
 			return NULL;
 		}

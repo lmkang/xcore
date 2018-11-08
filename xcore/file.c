@@ -68,13 +68,13 @@ int32_t alloc_block_bitmap(struct partition *part) {
 }
 
 // 将内存中bitmap第bit_index位所在的512字节同步到硬盘
-void bitmap_sync(struct partition *part, uint32_t bit_index, enum bitmap_type btmp) {
+void bitmap_sync(struct partition *part, uint32_t bit_index, enum bitmap_type btmp_type) {
 	uint32_t sector_offset = bit_index / 4096;
 	uint32_t offset_size = sector_offset * BLOCK_SIZE;
 	uint32_t sector_lba;
 	uint8_t *btmp_offset;
 	// 需要被同步到硬盘的位图只有inode_btp和block_btmp
-	switch(btmp) {
+	switch(btmp_type) {
 		case INODE_BITMAP:
 			sector_lba = part->sp_block->inode_btmp_lba + sector_offset;
 			btmp_offset = part->inode_btmp.bits + offset_size;
@@ -175,7 +175,7 @@ int32_t file_open(uint32_t inode_no, uint8_t flag) {
 	file_table[fd_index].fd_pos = 0;
 	file_table[fd_index].fd_flag = flag;
 	bool *write_flag = &file_table[fd_index].fd_inode->write_flag;
-	if((flag & FO_WRITEONLY) || (flag & FO_READWRITE)) {
+	if((flag == FO_WRITEONLY) || (flag == FO_READWRITE)) {
 		enum intr_status old_status = get_intr_status();
 		disable_intr();
 		if(!(*write_flag)) { // 没有进程在写该文件
@@ -209,7 +209,7 @@ int32_t file_write(struct file *file, const void *buf, uint32_t count) {
 		printk("exceed max file size 71680 byte, write file failed!\n");
 		return -1;
 	}
-	uint8_t *io_buf = sys_malloc(512);
+	uint8_t *io_buf = sys_malloc(BLOCK_SIZE);
 	if(io_buf == NULL) {
 		printk("file_write : alloc io_buf memory failed!\n");
 		return -1;
