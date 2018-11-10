@@ -85,7 +85,7 @@ void kmain(struct multiboot *mboot_ptr) {
 	//process_execute(u_prog_a, "u_prog_a");
 	//process_execute(u_prog_b, "u_prog_b");
 	
-	enable_intr();
+	//enable_intr();
 	
 	//console_printk("main_pid : %x\n", sys_getpid());
 	

@@ -18,6 +18,7 @@ void init_all() {
 	console_init(); //初始化终端
 	keyboard_init(); // 初始化键盘
 	syscall_init(); // 初始化系统调用
+	enable_intr(); // 开中断
 	ide_init(); // 初始化硬盘
 	fs_init(); // 初始化文件系统
 }
