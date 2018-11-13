@@ -3,9 +3,13 @@
 #include "string.h"
 #include "global.h"
 #include "process.h"
+#include "file.h"
 #include "interrupt.h"
 #include "debug.h"
 #include "print.h"
+
+// 文件表
+extern struct file file_table[MAX_FILE_OPEN];
 
 extern struct list thread_ready_list;
 extern struct list thread_all_list;
@@ -99,6 +103,20 @@ static void build_child_stack(struct task_struct *child_thread) {
 	child_thread->self_kstack = ebp;
 }
 
+// 更新inode的打开数
+static void update_open_count(struct task_struct *thread) {
+	int32_t local_fd = 3;
+	int32_t global_fd = 0;
+	while(local_fd < PROC_MAX_FILE_OPEN) {
+		global_fd = thread->fd_table[local_fd];
+		ASSERT(global_fd < MAX_FILE_OPEN);
+		if(global_fd != -1) {
+			++file_table[global_fd].fd_inode->open_count;
+		}
+		++local_fd;
+	}
+}
+
 // 复制父进程本身所占资源给子进程
 static int32_t copy_resource(struct task_struct *child_thread, \
 	struct task_struct *parent_thread) {
@@ -118,6 +136,8 @@ static int32_t copy_resource(struct task_struct *child_thread, \
 	copy_prog_body(child_thread, parent_thread, buf);
 	// 4 构建子进程thread_stack和修改返回值pid
 	build_child_stack(child_thread);
+	// 5 更新文件inode的打开数
+	update_open_count(child_thread);
 	kfree(buf, 1);
 	return 0;
 }

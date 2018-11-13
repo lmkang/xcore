@@ -23,6 +23,4 @@ void console_put_str(char *str);
 
 uint32_t console_printk(const char *format, ...);
 
-int32_t sys_write(int32_t fd, const void *buf, uint32_t count);
-
 #endif

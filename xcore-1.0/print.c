@@ -102,14 +102,3 @@ uint32_t console_printk(const char *format, ...) {
 	lock_release(&console_lock);
 	return ret_val;
 }
-
-// 系统调用,输出字符串
-int32_t sys_write(int32_t fd, const void *buf, uint32_t count) {
-	if(fd == 1) {
-		char tmp_buf[1024] = {0};
-		memcpy(tmp_buf, buf, count);
-		console_printk(tmp_buf);
-		return count;
-	}
-	return -1;
-}
