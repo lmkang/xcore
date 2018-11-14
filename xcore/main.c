@@ -11,6 +11,9 @@
 #include "string.h"
 #include "syscall.h"
 #include "stdio.h"
+#include "fs.h"
+#include "initrd.h"
+#include "debug.h"
 
 #define CHECK_FLAG(flag, bit) ((flag) & (1 << (bit)))
 
@@ -73,14 +76,43 @@ void kmain(struct multiboot *mboot_ptr) {
 	// 获取总物理内存容量
 	get_total_mem(mboot_ptr);
 	
+	uint32_t mods_count = mboot_ptr->mods_count;
+	uint32_t initrd_location = *((uint32_t*) mboot_ptr->mods_addr);
+	
 	// 初始化所有模块
 	init_all();
 	
 	// 打印总物理内存容量
-	printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_PADDR)) / (1024 * 1024));
+	console_printk("Total Memory : %dMB\n", *((uint32_t*) P2V(TOTAL_MEM_SIZE_PADDR)) / (1024 * 1024));
 	
-	process_execute(u_prog_a, "u_prog_a");
-	process_execute(u_prog_b, "u_prog_b");
+	// VFS
+	console_printk("mods_count : %d\n", mods_count);
+	console_printk("initrd_location : %x\n", initrd_location);
+	// Initialise the initial ramdisk, and set it as the filesystem root.
+    fs_root = initialise_initrd(initrd_location);
+    // list the contents of /
+    int i = 0;
+    struct dirent *node = 0;
+    while((node = readdir_fs(fs_root, i)) != 0) {
+        console_printk("Found file ");
+        console_printk(node->name);
+        fs_node_t *fsnode = finddir_fs(fs_root, node->name);
+        if((fsnode->flags & 0x7) == FS_DIRECTORY) {
+            console_printk("\n\t(directory)\n");
+        } else {
+            console_printk("\n\t contents: \"");
+            char buf[256];
+            uint32_t sz = read_fs(fsnode, 0, 256, buf);
+            for (int j = 0; j < sz; j++) {
+                console_put_char(buf[j]);
+            }
+            console_printk("\"\n");
+        }
+        ++i;
+    }
+	
+	//process_execute(u_prog_a, "u_prog_a");
+	//process_execute(u_prog_b, "u_prog_b");
 	
 	//enable_intr();
 	
