@@ -89,7 +89,7 @@ void kmain(struct multiboot *mboot_ptr) {
 	console_printk("mods_count : %d\n", mods_count);
 	console_printk("initrd_location : %x\n", initrd_location);
 	// Initialise the initial ramdisk, and set it as the filesystem root.
-    fs_root = initialise_initrd(initrd_location);
+    fs_root = initialise_initrd(P2V(initrd_location));
     // list the contents of /
     int i = 0;
     struct dirent *node = 0;

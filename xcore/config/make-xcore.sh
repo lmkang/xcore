@@ -28,6 +28,7 @@ cd kmnt
 mkdir -p boot/grub
 cd boot
 cp /usr/local/winshare/kernel .
+cp /usr/local/winshare/initrd.img initrd
 cd grub
 cp /boot/grub/stage1 . -r
 cp /boot/grub/stage2 . -r
